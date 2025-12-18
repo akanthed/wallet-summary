@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
+import { Analytics } from "@vercel/analytics/react";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9002';
 const title = 'Wallet Story Explorer - Discover Your Ethereum Wallet Personality';
@@ -47,6 +48,7 @@ export default function RootLayout({
       <body className="font-body antialiased">
         {children}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
