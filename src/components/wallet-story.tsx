@@ -42,6 +42,12 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
     const shareCardRef = useRef<HTMLDivElement>(null);
 
+    const generateFilename = (extension: 'pdf' | 'png'): string => {
+        const date = new Date();
+        const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).replace(/ /g, '-').replace(',', '');
+        const namePart = address.endsWith('.eth') ? address.replace('.eth', '') : `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+        return `wallet-story-${namePart}-${dateString}.${extension}`;
+    };
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -71,8 +77,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             // Add the image to the PDF
             pdf.addImage(dataUrl, 'PNG', 0, 0, 1200, 630);
           
-            const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-            pdf.save(`wallet-story-${truncatedAddress}.pdf`);
+            pdf.save(generateFilename('pdf'));
 
             toast({
                 title: "Success!",
@@ -105,8 +110,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             pixelRatio: 2,
         });
         const link = document.createElement("a");
-        const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-        link.download = `wallet-story-${truncatedAddress}.png`;
+        link.download = generateFilename('png');
         link.href = dataUrl;
         link.click();
         

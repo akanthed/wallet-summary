@@ -30,7 +30,7 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
         className="fixed -left-[9999px] top-0 bg-background text-foreground p-10 font-body"
         style={{ colorScheme: "dark", width: 1200, height: 630 }}
       >
-        <div className="border rounded-lg p-8 space-y-6 h-full bg-card flex flex-col justify-between">
+        <div className="border rounded-lg p-10 space-y-6 h-full bg-card flex flex-col justify-between">
           <header className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Icons.logo className="h-10 w-10 text-primary" />
