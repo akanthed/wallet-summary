@@ -119,6 +119,9 @@ export default {
             '--tw-prose-pre-bg': theme('colors.muted.DEFAULT'),
             '--tw-prose-th-borders': theme('colors.border'),
             '--tw-prose-td-borders': theme('colors.border'),
+            p: {
+              lineHeight: '1.75',
+            },
           }
         },
         invert: {

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -35,20 +35,22 @@ export function WalletStory({ result, onReset }: WalletStoryProps) {
             <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 text-center">
                 <h2 className="text-2xl font-bold">Analysis Incomplete</h2>
                 <p className="mt-2 text-muted-foreground">Could not generate a personality for this wallet.</p>
-                <Button onClick={onReset} size="lg" className="mt-6">Analyze Another Wallet</Button>
+                <Button onClick={onReset} size="lg" className="mt-6">
+                    <Search className="mr-2" />
+                    Analyze Another Wallet
+                </Button>
             </div>
         )
     }
 
     const shareCardCopy = `${personalityData.personalityTitle}\n${personalityData.oneLineSummary}\n\nTraits:\n- ${personalityData.traits.join('\n- ')}`;
-    const fullStoryText = `${shareCardCopy}\n\n${personalityData.personalityStory}`;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <TooltipProvider>
             <div className="space-y-10">
                 <header className="text-center space-y-4">
-                    <h1 className="text-4xl font-headline font-bold text-foreground animate-in fade-in slide-in-from-bottom-3 duration-700">
+                    <h1 className="text-4xl font-headline font-bold text-foreground tracking-wide animate-in fade-in slide-in-from-bottom-3 duration-700">
                         {personalityData.personalityTitle}
                     </h1>
                     <p className="text-xl text-muted-foreground font-light animate-in fade-in slide-in-from-bottom-3 duration-700" style={{animationDelay: '150ms'}}>
@@ -74,7 +76,7 @@ export function WalletStory({ result, onReset }: WalletStoryProps) {
                         <h3 className="text-lg font-headline font-semibold">Personality Story</h3>
                     </div>
                     <div className="prose prose-lg dark:prose-invert text-foreground/90 max-w-none">
-                        <p className="whitespace-pre-wrap font-body leading-relaxed">
+                        <p className="whitespace-pre-wrap font-body leading-relaxed" style={{lineHeight: 1.75}}>
                             {personalityData.personalityStory}
                         </p>
                     </div>
@@ -120,7 +122,10 @@ export function WalletStory({ result, onReset }: WalletStoryProps) {
                 </div>
 
                 <div className="flex justify-center items-center gap-4 pt-6">
-                    <Button onClick={onReset} size="lg">Analyze Another Wallet</Button>
+                    <Button onClick={onReset} size="lg">
+                        <Search className="mr-2 h-4 w-4" />
+                        Analyze Another
+                    </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="lg">
