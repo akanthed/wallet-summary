@@ -8,11 +8,12 @@ import { useToast } from "@/hooks/use-toast";
 import { LoadingState } from "./loading-state";
 import { AnalysisResult } from "@/lib/types";
 import { WalletStory } from "./wallet-story";
-import { ArrowRight, Sparkles, RefreshCw, Info, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowRight, Sparkles, RefreshCw, Info, CheckCircle2, XCircle, Users } from "lucide-react";
 import { getCachedResult, setCachedResult } from "@/lib/cache";
 import { checkRateLimit, incrementRateLimit, getRateLimit } from "@/lib/rate-limit";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { track } from "@/lib/analytics";
+import Link from "next/link";
 
 
 const EXAMPLE_WALLET = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
@@ -212,7 +213,7 @@ export function WalletExplorer() {
                         </Button>
                     </div>
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 flex flex-col items-center justify-center gap-2">
                     {!rateLimit.allowed ? (
                         <p className="text-sm text-destructive">
                             Daily limit reached. Resets at {rateLimit.resetTime}.
@@ -225,6 +226,12 @@ export function WalletExplorer() {
                             </button>
                         </p>
                     )}
+                     <Button variant="link" asChild>
+                        <Link href="/compare">
+                            <Users className="mr-2 h-4 w-4" />
+                            Compare Wallets
+                        </Link>
+                    </Button>
                 </div>
             </div>
         </div>
