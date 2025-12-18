@@ -6,6 +6,7 @@ import { generateWalletPersonality } from "@/ai/flows/generate-wallet-personalit
 import { generateTimelineEvents } from "@/ai/flows/generate-timeline-events";
 import { WalletStats, AnalysisResult, EtherscanTx, EtherscanTokenTx, EtherscanNftTx } from "@/lib/types";
 import { getCachedResult, setCachedResult } from "@/lib/cache";
+import { awardBadges } from "@/lib/badges";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const ENS_REGEX = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
@@ -144,6 +145,14 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
         
         const transactionSummaryForAI = summarizeTransactionsForAI(transactions, tokenTransfers, nftTransfers);
     
+        const badges = awardBadges({
+            transactions,
+            tokenTransfers,
+            nftTransfers,
+            balance: balanceEth,
+            walletAgeInDays,
+        });
+
         const [personalityResult, timelineEvents] = await Promise.all([
             generateWalletPersonality(aiInput),
             generateTimelineEvents({ transactionSummary: transactionSummaryForAI }),
@@ -164,6 +173,7 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
             limitedData: limitedData,
             personalityData: personalityResult,
             timelineEvents: timelineEvents,
+            badges: badges,
         };
 
         setCachedResult(address, result);

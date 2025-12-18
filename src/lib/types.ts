@@ -28,6 +28,7 @@ export interface EtherscanResponse<T> {
     timeStamp: string;
     tokenSymbol: string;
     tokenName: string;
+    contractAddress: string;
     from: string;
     to: string;
   }
@@ -36,6 +37,7 @@ export interface EtherscanResponse<T> {
     timeStamp: string;
     tokenName: string;
     tokenID: string;
+    contractAddress: string;
   }
   
   // Internal application types
@@ -61,6 +63,14 @@ export interface EtherscanResponse<T> {
     value?: string;
   }
 
+  export type Badge = {
+    id: string;
+    name: string;
+    description: string;
+    icon: string; // Lucide icon name
+    category: 'Activity' | 'Wealth' | 'Time' | 'NFT' | 'DeFi' | 'Special';
+  }
+
   export interface AnalysisResult {
     personality: string;
     story: string;
@@ -69,6 +79,7 @@ export interface EtherscanResponse<T> {
     limitedData: boolean;
     personalityData: PersonalityData;
     timelineEvents: TimelineEvent[];
+    badges: Badge[];
   }
   
   export type ComparisonResult = {

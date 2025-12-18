@@ -5,6 +5,7 @@ import * as etherscan from "@/lib/etherscan";
 import { generateWalletPersonality } from "@/ai/flows/generate-wallet-personality";
 import { generateTimelineEvents } from "@/ai/flows/generate-timeline-events";
 import { WalletStats, EtherscanTx, EtherscanTokenTx, EtherscanNftTx } from "@/lib/types";
+import { awardBadges } from "@/lib/badges";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const ENS_REGEX = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
@@ -150,6 +151,14 @@ export async function POST(request: Request) {
     };
 
     const transactionSummaryForAI = summarizeTransactionsForAI(transactions, tokenTransfers, nftTransfers);
+
+    const badges = awardBadges({
+        transactions,
+        tokenTransfers,
+        nftTransfers,
+        balance: balanceEth,
+        walletAgeInDays,
+    });
     
     // Generate story and timeline with AI in parallel
     const [personalityResult, timelineEvents] = await Promise.all([
@@ -171,7 +180,8 @@ export async function POST(request: Request) {
         stats: stats,
         limitedData: limitedData,
         personalityData: personalityResult,
-        timelineEvents: timelineEvents
+        timelineEvents: timelineEvents,
+        badges: badges,
     }
 
 
