@@ -1,3 +1,4 @@
+
 // Generic Etherscan API response wrappers
 export interface EtherscanResponse<T> {
     status: '1' | '0';
@@ -68,7 +69,7 @@ export interface EtherscanResponse<T> {
     name: string;
     description: string;
     icon: string; // Lucide icon name
-    category: 'Activity' | 'Wealth' | 'Time' | 'NFT' | 'DeFi' | 'Special';
+    category: 'activity' | 'wealth' | 'time' | 'nft' | 'defi' | 'special';
   }
 
   export interface AnalysisResult {
