@@ -20,6 +20,7 @@ import { toPng } from "html-to-image";
 import html2canvas from "html2canvas";
 import { Twitter } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { Timeline } from "./timeline";
 
 type WalletStoryProps = {
   result: AnalysisResult;
@@ -29,7 +30,7 @@ type WalletStoryProps = {
 
 export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { toast } = useToast();
-    const { personalityData } = result;
+    const { personalityData, timelineEvents } = result;
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [isDownloadingPng, setIsDownloadingPng] = useState(false);
     const shareCardRef = useRef<HTMLDivElement>(null);
@@ -231,6 +232,16 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                         style={{animationDelay: '800ms'}}
                     />
                 </div>
+
+                {timelineEvents && timelineEvents.length > 0 && (
+                  <>
+                    <Separator />
+                    <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '900ms'}}>
+                        <h3 className="text-lg font-headline font-semibold text-center">Wallet Journey</h3>
+                        <Timeline events={timelineEvents} />
+                    </div>
+                  </>
+                )}
 
                 <div className="flex justify-center items-center gap-4 pt-6">
                     <Button onClick={onReset} size="lg">
