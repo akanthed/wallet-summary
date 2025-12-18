@@ -26,6 +26,7 @@ import html2canvas from "html2canvas";
 import { Twitter } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { Timeline } from "./timeline";
+import { Badges } from "./badges";
 
 type WalletStoryProps = {
   result: AnalysisResult;
@@ -35,7 +36,7 @@ type WalletStoryProps = {
 
 export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { toast } = useToast();
-    const { personalityData, timelineEvents } = result;
+    const { personalityData, timelineEvents, badges } = result;
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [isDownloadingPng, setIsDownloadingPng] = useState(false);
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
@@ -199,6 +200,17 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                         </p>
                     </div>
                 </div>
+                
+                {badges && badges.length > 0 && (
+                    <>
+                        <Separator />
+                        <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '500ms'}}>
+                            <h3 className="text-lg font-headline font-semibold text-center">Achievements ({badges.length})</h3>
+                            <Badges badges={badges} />
+                        </div>
+                    </>
+                )}
+
 
                 {result.limitedData && (
                 <p className="text-center text-sm text-muted-foreground">
