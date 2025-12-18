@@ -1,0 +1,55 @@
+// Generic Etherscan API response wrappers
+export interface EtherscanResponse<T> {
+    status: '1' | '0';
+    message: string;
+    result: T;
+  }
+  
+  export interface EtherscanError {
+    status: '0';
+    message: string;
+    result: string;
+  }
+  
+  // Specific Etherscan result types
+  export interface EtherscanTx {
+    blockNumber: string;
+    timeStamp: string;
+    hash: string;
+    from: string;
+    to: string;
+    value: string;
+    gasPrice: string;
+    gasUsed: string;
+    isError: string;
+  }
+  
+  export interface EtherscanTokenTx {
+    timeStamp: string;
+    tokenSymbol: string;
+    tokenName: string;
+    from: string;
+    to: string;
+  }
+  
+  export interface EtherscanNftTx {
+    timeStamp: string;
+    tokenName: string;
+    tokenID: string;
+  }
+  
+  // Internal application types
+  export interface WalletStats {
+    walletAge: number;
+    txCount: number;
+    balance: string;
+    activityStatus: 'Active' | 'Moderate' | 'Dormant';
+  }
+  
+  export interface AnalysisResult {
+    personality: string;
+    story: string;
+    stats: WalletStats;
+    limitedData: boolean;
+  }
+  
