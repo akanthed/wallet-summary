@@ -47,8 +47,15 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const generateFilename = (extension: 'pdf' | 'png'): string => {
         const date = new Date();
         const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).replace(/ /g, '-').replace(',', '');
-        const namePart = address.endsWith('.eth') ? address.replace('.eth', '') : `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-        return `wallet-story-${namePart}-${dateString}.${extension}`;
+        
+        const personalityPart = personalityData.personalityTitle
+            .toLowerCase()
+            .replace(/the /g, '')
+            .replace(/[^a-z0-9-]/g, '-') // Sanitize
+            .replace(/-+/g, '-') // Collapse multiple hyphens
+            .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+
+        return `wallet-story-${personalityPart}-${dateString}.${extension}`;
     };
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
