@@ -27,6 +27,16 @@ export function WalletExplorer() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check for address in URL on initial load
+    const urlParams = new URLSearchParams(window.location.search);
+    const addressFromUrl = urlParams.get('address');
+    if (addressFromUrl && WALLET_ADDRESS_REGEX.test(addressFromUrl)) {
+      setAddress(addressFromUrl);
+      startTransition(() => {
+        handleAnalyze(addressFromUrl);
+      });
+    }
+
     setRateLimit(checkRateLimit());
   }, []);
 
@@ -39,6 +49,9 @@ export function WalletExplorer() {
       });
       return;
     }
+    
+    // Update URL without reloading page
+    window.history.pushState({}, '', `?address=${walletAddress}`);
 
     // Rate limit check
     const currentRateLimit = checkRateLimit();
@@ -109,6 +122,7 @@ export function WalletExplorer() {
     setResult(null);
     setAddress("");
     setIsCached(false);
+    window.history.pushState({}, '', '/');
   }
 
   if (isLoading) {

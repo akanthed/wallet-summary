@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Twitter } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -10,6 +10,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuSeparator
   } from "@/components/ui/dropdown-menu"
 import { Badge } from "./ui/badge";
 import { ShareCard } from "./share-card";
@@ -30,10 +31,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const shareCardRef = useRef<HTMLDivElement>(null);
 
 
-    const handleCopyToClipboard = (text: string) => {
+    const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
         toast({
-          title: "Copied to clipboard!",
+          title: successMessage,
         });
       };
     
@@ -88,7 +89,20 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         )
     }
 
-    const shareCardCopy = `${personalityData.personalityTitle}\n${personalityData.oneLineSummary}\n\nTraits:\n- ${personalityData.traits.join('\n- ')}`;
+    const shareCardCopy = `I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭\n\nCheck out yours at ${window.location.origin}`;
+    
+    const shareOnTwitter = () => {
+        const text = encodeURIComponent(`I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭\n\nCheck out yours at`);
+        const url = encodeURIComponent(`${window.location.origin}?address=${address}`);
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+        window.open(twitterUrl, "_blank");
+    }
+
+    const copyLink = () => {
+        const url = `${window.location.origin}?address=${address}`;
+        handleCopyToClipboard(url, "Link copied to clipboard!");
+    }
+
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
@@ -179,10 +193,19 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleCopyToClipboard(shareCardCopy)}>
+                            <DropdownMenuItem onClick={copyLink}>
+                                <LinkIcon className="mr-2 h-4 w-4" />
+                                <span>Copy Link</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleCopyToClipboard(shareCardCopy, "Share text copied!")}>
                                 <Copy className="mr-2 h-4 w-4" />
                                 <span>Copy Share Text</span>
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={shareOnTwitter}>
+                                <Twitter className="mr-2 h-4 w-4" />
+                                <span>Share on Twitter</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
                                 {isDownloadingPdf ? (
                                     <div className="flex items-center">
