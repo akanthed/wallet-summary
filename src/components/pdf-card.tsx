@@ -24,10 +24,20 @@ export const PdfCard = forwardRef<HTMLDivElement, PdfCardProps>(
     return (
       <div
         ref={ref}
-        className="fixed -left-[9999px] top-0 bg-background text-foreground p-10 font-body"
-        style={{ colorScheme: "dark", width: 1200 }}
+        className="bg-background text-foreground p-10 font-body"
+        style={{ 
+          colorScheme: "dark", 
+          width: 1200, 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          zIndex: -100,
+          visibility: 'hidden', // Start as hidden
+          opacity: 0,
+          height: 'auto',
+        }}
       >
-        <div className="border rounded-lg p-10 space-y-8 bg-card" style={{minHeight: '100vh', height: 'auto'}}>
+        <div className="border rounded-lg p-10 space-y-8 bg-card">
           <header className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Icons.logo className="h-10 w-10 text-primary" />

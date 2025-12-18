@@ -12,10 +12,6 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-    DropdownMenuSub,
-    DropdownMenuSubTrigger,
-    DropdownMenuSubContent,
-    DropdownMenuPortal
 } from "@/components/ui/dropdown-menu"
 import {
     Collapsible,
@@ -55,27 +51,32 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
     const generateFilename = (extension: 'pdf' | 'png') => {
         const date = new Date();
-        const dateStr = `${date.toLocaleString('default', { month: 'short' })}-${date.getDate()}-${date.getFullYear()}`;
+        const dateStr = `${date.toLocaleString('default', { month: 'short' })}-${date.getDate()}-${date.getFullYear()}`.toLowerCase();
         const personality = personalityData.personalityTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
         return `wallet-story-${personality}-${dateStr}.${extension}`;
     }
 
     const handleDownloadPdf = async () => {
-        if (!pdfCardRef.current) return;
+        const node = pdfCardRef.current;
+        if (!node) return;
+        
         setIsDownloadingPdf(true);
         track('click_download_pdf', { address });
 
+        // Temporarily make the component visible for capture
+        node.style.visibility = 'visible';
+
         try {
-            const dataUrl = await toPng(pdfCardRef.current, { 
+            const dataUrl = await toPng(node, { 
                 cacheBust: true, 
-                pixelRatio: 2, // High quality
+                pixelRatio: 2,
                 quality: 0.95
             });
             
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'px',
-                format: [pdfCardRef.current.offsetWidth, pdfCardRef.current.offsetHeight]
+                format: [node.offsetWidth, node.offsetHeight]
             });
             
             const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -97,6 +98,8 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 variant: "destructive"
             });
         } finally {
+            // Hide the component again
+            node.style.visibility = 'hidden';
             setIsDownloadingPdf(false);
         }
     };
@@ -264,7 +267,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                      <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="lg">
-                                <Share2 className="mr-2 h-4 w-4" /> Share & Download
+                                <Share2 className="mr-2 h-4 w-4" /> Share
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
