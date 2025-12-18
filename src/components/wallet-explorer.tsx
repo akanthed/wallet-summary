@@ -84,6 +84,7 @@ export function WalletExplorer() {
         if (cachedResult) {
             setResult(cachedResult);
             setIsCached(true);
+            track('analysis_cached', { address: walletAddress });
             return;
         }
     }
