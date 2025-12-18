@@ -1,98 +1,88 @@
 
 import { forwardRef } from "react";
-import { AnalysisResult } from "@/lib/types";
+import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, User, Pencil } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { Separator } from "./ui/separator";
 import { Icons } from "./icons";
+import { cn } from "@/lib/utils";
 
 type ShareCardProps = {
   result: AnalysisResult;
   address: string;
+  format: ImageFormat;
+  dimensions: { width: number; height: number };
 };
 
-// Using forwardRef to pass the ref to the div
 export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
-  ({ result, address }, ref) => {
+  ({ result, address, format, dimensions }, ref) => {
     const { personalityData, stats } = result;
-    const generationDate = new Date().toLocaleDateString();
     const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-
-    // Get a shortened version of the story
     const storyExcerpt = personalityData.personalityStory.split('. ').slice(0, 2).join('. ') + '.';
 
+    const isStory = format === 'Story';
 
     return (
-      // This div is what will be captured for the image/PDF.
-      // It's positioned off-screen and not visible to the user.
       <div
         ref={ref}
-        className="fixed -left-[9999px] top-0 bg-background text-foreground p-10 font-body"
-        style={{ colorScheme: "dark", width: 1200, height: 630 }}
+        className="fixed -left-[9999px] top-0 bg-background text-foreground font-body"
+        style={{ colorScheme: "dark", width: dimensions.width, height: dimensions.height }}
       >
-        <div className="border rounded-lg p-10 space-y-6 h-full bg-card flex flex-col justify-between">
-          <header className="flex items-center justify-between">
+        <div className={cn(
+          "border rounded-lg p-10 space-y-6 h-full bg-card flex flex-col justify-between",
+           isStory ? "p-8 space-y-8" : "p-10 space-y-6"
+        )}>
+          <header className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <Icons.logo className="h-10 w-10 text-primary" />
-              <h1 className="text-2xl font-headline font-bold">
+              <Icons.logo className={cn("text-primary", isStory ? "h-8 w-8" : "h-10 w-10")} />
+              <h1 className={cn("font-headline font-bold", isStory ? "text-xl" : "text-2xl")}>
                 Wallet Story Explorer
               </h1>
             </div>
-            <div className="text-right">
-                <p className="font-mono text-lg">{truncatedAddress}</p>
+            <div className="text-right flex-shrink-0">
+                <p className={cn("font-mono", isStory ? "text-base" : "text-lg")}>{truncatedAddress}</p>
                 <p className="text-sm text-muted-foreground">Wallet Address</p>
             </div>
           </header>
 
-          <main className="flex-grow flex flex-col justify-center space-y-8">
+          <main className={cn(
+            "flex-grow flex flex-col justify-center",
+            isStory ? "space-y-6" : "space-y-8"
+            )}>
             <div className="text-center space-y-3">
-              <h2 className="text-4xl font-headline font-bold text-primary bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              <h2 className={cn(
+                "font-headline font-bold text-primary bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent",
+                isStory ? "text-5xl" : "text-6xl"
+                )}>
                 {personalityData.personalityTitle}
               </h2>
-              <p className="text-xl text-muted-foreground">
+              <p className={cn("text-muted-foreground", isStory ? "text-lg" : "text-xl")}>
                 {personalityData.oneLineSummary}
               </p>
             </div>
 
-            <div className="flex justify-center flex-wrap gap-4">
+            <div className="flex justify-center flex-wrap gap-3">
               {personalityData.traits.map((trait, index) => (
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="text-lg px-6 py-3"
+                  className={cn(isStory ? "text-base px-4 py-2" : "text-lg px-6 py-3")}
                 >
                   {trait}
                 </Badge>
               ))}
             </div>
 
-            <div className="text-center text-foreground/90 max-w-2xl mx-auto" style={{ lineHeight: 1.6 }}>
+            <div className={cn("text-center text-foreground/90 max-w-2xl mx-auto", isStory ? "text-base" : "text-lg")} style={{ lineHeight: 1.6 }}>
               <p>{storyExcerpt}</p>
             </div>
           </main>
           
-          <div className="grid grid-cols-4 gap-4">
-            <StatsCard
-              title="Wallet Age"
-              value={`${stats.walletAge} days`}
-              icon={CalendarDays}
-            />
-            <StatsCard
-              title="Transactions"
-              value={stats.txCount}
-              icon={Repeat}
-            />
-            <StatsCard
-              title="ETH Balance"
-              value={`${stats.balance} ETH`}
-              icon={Wallet}
-            />
-            <StatsCard
-              title="Activity"
-              value={stats.activityStatus}
-              icon={Activity}
-            />
+          <div className={cn("grid gap-4", isStory ? "grid-cols-2" : "grid-cols-4")}>
+            <StatsCard title="Wallet Age" value={`${stats.walletAge}d`} icon={CalendarDays} />
+            <StatsCard title="Transactions" value={stats.txCount} icon={Repeat} />
+            <StatsCard title="ETH Balance" value={`${parseFloat(stats.balance).toFixed(2)}`} icon={Wallet} />
+            <StatsCard title="Activity" value={stats.activityStatus} icon={Activity} />
           </div>
 
 

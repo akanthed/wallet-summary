@@ -1,4 +1,5 @@
 
+
 // Generic Etherscan API response wrappers
 export interface EtherscanResponse<T> {
     status: '1' | '0';
@@ -89,3 +90,4 @@ export interface EtherscanResponse<T> {
     wallet2: AnalysisResult | null;
   }
   
+  export type ImageFormat = 'Social' | 'Square' | 'Story';

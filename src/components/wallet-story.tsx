@@ -1,8 +1,8 @@
 
 import { Button } from "@/components/ui/button";
-import { AnalysisResult } from "@/lib/types";
+import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown, Check } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,10 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-    DropdownMenuSeparator
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger
   } from "@/components/ui/dropdown-menu"
 import {
     Collapsible,
@@ -21,7 +24,7 @@ import {
 import { Badge } from "./ui/badge";
 import { ShareCard } from "./share-card";
 import { PdfCard } from "./pdf-card";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
 import { Twitter } from "lucide-react";
@@ -35,14 +38,28 @@ type WalletStoryProps = {
   address: string;
 };
 
+const IMAGE_FORMAT_CONFIG: Record<ImageFormat, { width: number; height: number; }> = {
+    Social: { width: 1200, height: 630 },
+    Square: { width: 1080, height: 1080 },
+    Story: { width: 1080, height: 1920 },
+}
+
 export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { toast } = useToast();
     const { personalityData, timelineEvents, badges } = result;
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [isDownloadingPng, setIsDownloadingPng] = useState(false);
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+    const [imageFormat, setImageFormat] = useState<ImageFormat>('Social');
     const shareCardRef = useRef<HTMLDivElement>(null);
     const pdfCardRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const savedFormat = localStorage.getItem('imageFormatPreference') as ImageFormat | null;
+        if (savedFormat && IMAGE_FORMAT_CONFIG[savedFormat]) {
+          setImageFormat(savedFormat);
+        }
+      }, []);
 
     const generateFilename = (extension: 'pdf' | 'png'): string => {
         const date = new Date();
@@ -65,7 +82,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         });
       };
     
-    const handleDownloadPdf = async () => {
+      const handleDownloadPdf = async () => {
         track('click_download_pdf', { address });
         if (!pdfCardRef.current) return;
         setIsDownloadingPdf(true);
@@ -109,10 +126,22 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         }
     };
     
-    const handleDownloadPng = async () => {
-      track('click_download_png', { address });
-      if (!shareCardRef.current) return;
+    const handleDownloadPng = async (format: ImageFormat) => {
+      track('click_download_png', { address, format });
+      
+      // Set the format so the component re-renders with the correct dimensions
+      setImageFormat(format);
+      localStorage.setItem('imageFormatPreference', format);
+
       setIsDownloadingPng(true);
+
+      // We need a short delay to allow React to re-render the ShareCard with the new dimensions
+      await new Promise(resolve => setTimeout(resolve, 50));
+
+      if (!shareCardRef.current) {
+          setIsDownloadingPng(false);
+          return;
+      };
 
       try {
         const dataUrl = await toPng(shareCardRef.current, { 
@@ -127,9 +156,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         
         toast({
             title: "Success!",
-            description: "PNG Image downloaded successfully.",
+            description: `PNG Image (${format}) downloaded successfully.`,
         });
-        track('download_png_success', { address });
+        track('download_png_success', { address, format });
 
       } catch (err) {
         console.error("Failed to download PNG", err);
@@ -138,7 +167,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             title: "Error",
             description: "Failed to generate image. Please try again.",
           });
-        track('download_png_failed', { address, error: err instanceof Error ? err.message : String(err) });
+        track('download_png_failed', { address, format, error: err instanceof Error ? err.message : String(err) });
       } finally {
         setIsDownloadingPng(false);
       }
@@ -182,7 +211,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
-        <ShareCard ref={shareCardRef} result={result} address={address} />
+        <ShareCard ref={shareCardRef} result={result} address={address} format={imageFormat} dimensions={IMAGE_FORMAT_CONFIG[imageFormat]} />
         <PdfCard ref={pdfCardRef} result={result} address={address} />
         <TooltipProvider>
             <div className="space-y-10">
@@ -324,22 +353,26 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={handleDownloadPng} disabled={isDownloadingPng}>
-                                {isDownloadingPng ? (
-                                    <div className="flex items-center">
-                                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Generating...
-                                    </div>
-                                ) : (
-                                    <>
-                                        <Camera className="mr-2 h-4 w-4" />
-                                        <span>Image (PNG)</span>
-                                    </>
-                                )}
-                            </DropdownMenuItem>
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger disabled={isDownloadingPng}>
+                                    <Camera className="mr-2 h-4 w-4" />
+                                    <span>Image (PNG)</span>
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => handleDownloadPng('Social')} disabled={isDownloadingPng}>
+                                        <span className="flex-grow">Social Card (1200x630)</span>
+                                        {imageFormat === 'Social' && <Check className="h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownloadPng('Square')} disabled={isDownloadingPng}>
+                                        <span className="flex-grow">Instagram Post (1080x1080)</span>
+                                        {imageFormat === 'Square' && <Check className="h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleDownloadPng('Story')} disabled={isDownloadingPng}>
+                                        <span className="flex-grow">Instagram Story (1080x1920)</span>
+                                        {imageFormat === 'Story' && <Check className="h-4 w-4" />}
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
                             <DropdownMenuItem onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
                                 {isDownloadingPdf ? (
                                     <div className="flex items-center">
