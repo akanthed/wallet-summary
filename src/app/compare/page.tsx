@@ -15,6 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import { StatsCard } from "@/components/stats-card";
 import { CalendarDays, Repeat, Wallet, Activity } from "lucide-react";
 import { Footer } from "@/components/footer";
+import { Separator } from "@/components/ui/separator";
+import { Badges } from "@/components/badges";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const ENS_REGEX = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
@@ -44,7 +47,7 @@ function WalletComparisonResult({ result, address1, address2 }: { result: Compar
             )
         }
 
-        const { personalityData, stats } = walletResult;
+        const { personalityData, stats, badges } = walletResult;
 
         return (
             <Card className="flex-1 w-full animate-in fade-in-0 duration-500">
@@ -70,6 +73,18 @@ function WalletComparisonResult({ result, address1, address2 }: { result: Compar
                        <StatsCard title="Balance" value={`${parseFloat(stats.balance).toFixed(4)} ETH`} icon={Wallet} />
                        <StatsCard title="Activity" value={stats.activityStatus} icon={Activity} />
                     </div>
+
+                    {badges && badges.length > 0 && (
+                        <>
+                            <Separator />
+                            <div className="space-y-4">
+                                <h3 className="text-lg font-headline font-semibold text-center">Achievements ({badges.length})</h3>
+                                <TooltipProvider>
+                                    <Badges badges={badges} />
+                                </TooltipProvider>
+                            </div>
+                        </>
+                    )}
                 </CardContent>
             </Card>
         )
@@ -302,3 +317,5 @@ export default function ComparePage() {
 }
 
     
+
+  
