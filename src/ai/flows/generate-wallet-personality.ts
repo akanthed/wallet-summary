@@ -28,7 +28,7 @@ const GenerateWalletPersonalityOutputSchema = z.object({
     personalityTitle: z.string().describe("The wallet's personality type (e.g., 'The Quiet Strategist')."),
     oneLineSummary: z.string().describe("A one-line summary of the wallet's behavior."),
     traits: z.array(z.string()).length(3).describe("A list of exactly 3 personality traits."),
-    personalityStory: z.string().describe("A short paragraph (4-5 lines max) explaining the wallet's behavior."),
+    personalityStory: z.string().describe("A short paragraph (3-4 lines max) explaining the wallet's behavior with a strong opening and memorable closing."),
 });
 export type GenerateWalletPersonalityOutput = z.infer<typeof GenerateWalletPersonalityOutputSchema>;
 
@@ -76,14 +76,13 @@ TASK:
 1. Describe who this wallet would be IF IT WERE A PERSON.
 2. Give them:
    - A personality type (1 short title)
-   - 3 personality traits
-   - A short lifestyle description
-3. Write 1 short paragraph (4-5 lines max) explaining their behavior.
+   - 3 personality traits (single words)
+   - A short, punchy one-line summary (max 12 words)
+3. Write 1 short paragraph (3-4 lines) explaining their behavior. It must have a strong opening line and a memorable closing sentence.
 
 STYLE RULES:
 - Use metaphors and analogies
-- Casual, human tone
-- Curious and fun, not technical
+- Casual, human, and curious tone
 - Do NOT mention numbers directly unless needed
 - Do NOT mention “wallet”, “address”, or “blockchain” in the final output
 

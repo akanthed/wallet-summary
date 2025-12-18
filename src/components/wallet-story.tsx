@@ -40,34 +40,35 @@ export function WalletStory({ result, onReset }: WalletStoryProps) {
         )
     }
 
-    const fullStoryText = `${personalityData.personalityTitle}\n${personalityData.oneLineSummary}\n\nTraits:\n- ${personalityData.traits.join('\n- ')}\n\n${personalityData.personalityStory}`;
+    const shareCardCopy = `${personalityData.personalityTitle}\n${personalityData.oneLineSummary}\n\nTraits:\n- ${personalityData.traits.join('\n- ')}`;
+    const fullStoryText = `${shareCardCopy}\n\n${personalityData.personalityStory}`;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <TooltipProvider>
             <div className="space-y-10">
                 <header className="text-center space-y-4">
-                    <h1 className="text-4xl font-headline font-bold text-foreground">
+                    <h1 className="text-4xl font-headline font-bold text-foreground animate-in fade-in slide-in-from-bottom-3 duration-700">
                         {personalityData.personalityTitle}
                     </h1>
-                    <p className="text-xl text-muted-foreground font-light">
+                    <p className="text-xl text-muted-foreground font-light animate-in fade-in slide-in-from-bottom-3 duration-700" style={{animationDelay: '150ms'}}>
                         {personalityData.oneLineSummary}
                     </p>
                 </header>
 
-                <div className="bg-card border rounded-lg p-6 space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '100ms'}}>
+                <div className="bg-card border rounded-lg p-6 space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '200ms'}}>
                     <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-primary" />
                         <h3 className="text-lg font-headline font-semibold">Personality Traits</h3>
                     </div>
                     <div className="flex flex-wrap gap-3">
                         {personalityData.traits.map((trait, index) => (
-                            <Badge key={index} variant="secondary" className="text-base px-4 py-2">{trait}</Badge>
+                            <Badge key={index} variant="secondary" className="text-base px-4 py-2 transform transition-transform hover:scale-105 animate-in fade-in zoom-in-95 duration-300" style={{animationDelay: `${300 + index * 100}ms`}}>{trait}</Badge>
                         ))}
                     </div>
                 </div>
 
-                <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '200ms'}}>
+                <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '400ms'}}>
                     <div className="flex items-center gap-3">
                         <Pencil className="h-5 w-5 text-primary" />
                         <h3 className="text-lg font-headline font-semibold">Personality Story</h3>
@@ -93,28 +94,28 @@ export function WalletStory({ result, onReset }: WalletStoryProps) {
                         value={`${result.stats.walletAge} days`}
                         icon={CalendarDays}
                         className="animate-in fade-in-0 zoom-in-95 duration-500"
-                        style={{animationDelay: '100ms'}}
+                        style={{animationDelay: '500ms'}}
                     />
                     <StatsCard
                         title="Total Transactions"
                         value={result.stats.txCount}
                         icon={Repeat}
                         className="animate-in fade-in-0 zoom-in-95 duration-500"
-                        style={{animationDelay: '200ms'}}
+                        style={{animationDelay: '600ms'}}
                     />
                     <StatsCard
                         title="ETH Balance"
                         value={`${result.stats.balance} ETH`}
                         icon={Wallet}
                         className="animate-in fade-in-0 zoom-in-95 duration-500"
-                        style={{animationDelay: '300ms'}}
+                        style={{animationDelay: '700ms'}}
                     />
                     <StatsCard
                         title="Activity"
                         value={result.stats.activityStatus}
                         icon={Activity}
                         className="animate-in fade-in-0 zoom-in-95 duration-500"
-                        style={{animationDelay: '400ms'}}
+                        style={{animationDelay: '800ms'}}
                     />
                 </div>
 
@@ -127,9 +128,9 @@ export function WalletStory({ result, onReset }: WalletStoryProps) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleCopyToClipboard(fullStoryText)}>
+                            <DropdownMenuItem onClick={() => handleCopyToClipboard(shareCardCopy)}>
                                 <Copy className="mr-2 h-4 w-4" />
-                                <span>Copy Story Text</span>
+                                <span>Copy Share Text</span>
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => alert("PDF Download coming soon!")}>
                                 <Download className="mr-2 h-4 w-4" />
