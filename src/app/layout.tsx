@@ -2,9 +2,34 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:9002';
+const title = 'Wallet Story Explorer - Discover Your Ethereum Wallet Personality';
+const description = 'Turn any Ethereum wallet into a readable story. Discover its personality, history, and on-chain journey, powered by AI.';
+
 export const metadata: Metadata = {
-  title: 'Wallet Story Explorer',
-  description: 'Turn any Ethereum wallet into a readable story with AI.',
+  title: title,
+  description: description,
+  openGraph: {
+    title: title,
+    description: description,
+    url: siteUrl,
+    siteName: 'Wallet Story Explorer',
+    images: [
+      {
+        url: `${siteUrl}/og-image.png`,
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: title,
+    description: description,
+    images: [`${siteUrl}/og-image.png`],
+  },
 };
 
 export default function RootLayout({
