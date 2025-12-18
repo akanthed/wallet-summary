@@ -8,6 +8,7 @@ import { Icons } from "./icons";
 import { Timeline } from "./timeline";
 import { Badges } from "./badges";
 import { Separator } from "./ui/separator";
+import { TooltipProvider } from "./ui/tooltip";
 
 type PdfCardProps = {
   result: AnalysisResult;
@@ -26,7 +27,7 @@ export const PdfCard = forwardRef<HTMLDivElement, PdfCardProps>(
         className="fixed -left-[9999px] top-0 bg-background text-foreground p-10 font-body"
         style={{ colorScheme: "dark", width: 1200 }}
       >
-        <div className="border rounded-lg p-10 space-y-8 h-full bg-card flex flex-col justify-between">
+        <div className="border rounded-lg p-10 space-y-8 bg-card" style={{minHeight: '100vh', height: 'auto'}}>
           <header className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Icons.logo className="h-10 w-10 text-primary" />
@@ -83,7 +84,9 @@ export const PdfCard = forwardRef<HTMLDivElement, PdfCardProps>(
                     <Separator />
                     <div className="space-y-6">
                         <h3 className="text-lg font-headline font-semibold text-center">Achievements ({badges.length})</h3>
-                        <Badges badges={badges} />
+                        <TooltipProvider>
+                            <Badges badges={badges} />
+                        </TooltipProvider>
                     </div>
                 </>
             )}
@@ -104,7 +107,9 @@ export const PdfCard = forwardRef<HTMLDivElement, PdfCardProps>(
                     <Separator />
                     <div className="space-y-6">
                         <h3 className="text-lg font-headline font-semibold text-center">Wallet Journey</h3>
-                        <Timeline events={timelineEvents} />
+                        <TooltipProvider>
+                            <Timeline events={timelineEvents} />
+                        </TooltipProvider>
                     </div>
                 </>
             )}
