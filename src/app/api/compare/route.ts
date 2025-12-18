@@ -4,6 +4,7 @@ import { z } from "zod";
 import * as etherscan from "@/lib/etherscan";
 import { generateWalletPersonality } from "@/ai/flows/generate-wallet-personality";
 import { WalletStats, AnalysisResult } from "@/lib/types";
+import { getCachedResult, setCachedResult } from "@/lib/cache";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const ENS_REGEX = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
@@ -43,6 +44,11 @@ function createRecentActivitySummary(transactions: any[], daysSinceLastTx: numbe
 }
 
 async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
+    const cachedResult = getCachedResult(address);
+    if (cachedResult) {
+        return cachedResult;
+    }
+
     try {
         const [balanceWei, transactions] = await Promise.all([
             etherscan.getAccountBalance(address),
@@ -97,7 +103,7 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
           activityStatus: activityStatus,
         };
         
-        return {
+        const result: AnalysisResult = {
             personality: `${personalityResult.personalityTitle}`,
             story: `${personalityResult.oneLineSummary}\n\n${personalityResult.personalityStory}`,
             highlights: personalityResult.traits,
@@ -105,6 +111,10 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
             limitedData: limitedData,
             personalityData: personalityResult,
         };
+
+        setCachedResult(address, result);
+        return result;
+
     } catch (error) {
         console.error(`Failed to analyze wallet ${address}:`, error);
         return null;
