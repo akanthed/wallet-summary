@@ -76,7 +76,7 @@ export function WalletStory({ result, onReset }: WalletStoryProps) {
                         <h3 className="text-lg font-headline font-semibold">Personality Story</h3>
                     </div>
                     <div className="prose prose-lg dark:prose-invert text-foreground/90 max-w-none">
-                        <p className="whitespace-pre-wrap font-body leading-relaxed" style={{lineHeight: 1.75}}>
+                        <p className="whitespace-pre-wrap font-body" style={{lineHeight: 1.75}}>
                             {personalityData.personalityStory}
                         </p>
                     </div>
