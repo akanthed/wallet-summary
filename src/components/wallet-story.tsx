@@ -1,8 +1,9 @@
 
+
 import { Button } from "@/components/ui/button";
-import { AnalysisResult, ImageFormat } from "@/lib/types";
+import { AnalysisResult } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown, Check, Loader2, Linkedin } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -18,12 +19,7 @@ import {
     CollapsibleTrigger,
   } from "@/components/ui/collapsible"
 import { Badge } from "./ui/badge";
-import { ShareCard } from "./share-card";
-import { PdfCard } from "./pdf-card";
-import { useState, useRef, useEffect } from "react";
-import jsPDF from "jspdf";
-import { toPng } from "html-to-image";
-import { Twitter } from "lucide-react";
+import { useState } from "react";
 import { track } from "@/lib/analytics";
 import { Timeline } from "./timeline";
 import { Badges } from "./badges";
@@ -34,42 +30,10 @@ type WalletStoryProps = {
   address: string;
 };
 
-const IMAGE_FORMAT_CONFIG: Record<ImageFormat, { width: number; height: number; }> = {
-    Social: { width: 1200, height: 630 },
-    Square: { width: 1080, height: 1080 },
-    Story: { width: 1080, height: 1920 },
-}
-
 export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { toast } = useToast();
     const { personalityData, timelineEvents, badges } = result;
-    const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-    const [isDownloadingPng, setIsDownloadingPng] = useState(false);
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
-    const [imageFormat, setImageFormat] = useState<ImageFormat>('Social');
-    const shareCardRef = useRef<HTMLDivElement>(null);
-    const pdfCardRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const savedFormat = localStorage.getItem('imageFormatPreference') as ImageFormat | null;
-        if (savedFormat && IMAGE_FORMAT_CONFIG[savedFormat]) {
-          setImageFormat(savedFormat);
-        }
-      }, []);
-
-    const generateFilename = (extension: 'pdf' | 'png'): string => {
-        const date = new Date();
-        const dateString = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).replace(/ /g, '-').replace(',', '');
-        
-        const personalityPart = personalityData.personalityTitle
-            .toLowerCase()
-            .replace(/the /g, '')
-            .replace(/[^a-z0-9-]/g, '-') // Sanitize
-            .replace(/-+/g, '-') // Collapse multiple hyphens
-            .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
-
-        return `wallet-story-${personalityPart}-${dateString}.${extension}`;
-    };
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -77,98 +41,6 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
           title: successMessage,
         });
       };
-    
-      const handleDownloadPdf = async () => {
-        track('click_download_pdf', { address });
-        if (!pdfCardRef.current) return;
-        setIsDownloadingPdf(true);
-        try {
-            const dataUrl = await toPng(pdfCardRef.current, {
-                cacheBust: true,
-                quality: 0.95,
-                pixelRatio: 2,
-            });
-
-            // Dynamically get the width and height from the rendered component
-            const width = pdfCardRef.current.offsetWidth;
-            const height = pdfCardRef.current.offsetHeight;
-
-            // Create a new jsPDF instance
-            const pdf = new jsPDF({
-                orientation: width > height ? 'landscape' : 'portrait',
-                unit: 'px',
-                format: [width, height]
-            });
-
-            pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
-            pdf.save(generateFilename('pdf'));
-
-            toast({
-                title: "Success!",
-                description: "PDF downloaded successfully.",
-            });
-            track('download_pdf_success', { address });
-
-        } catch (error) {
-            console.error("Failed to download PDF", error);
-            toast({
-                variant: "destructive",
-                title: "Error",
-                description: "Failed to generate PDF. Please try again.",
-            });
-            track('download_pdf_failed', { address, error: error instanceof Error ? error.message : String(error) });
-        } finally {
-            setIsDownloadingPdf(false);
-        }
-    };
-    
-    const handleDownloadPng = async (format: ImageFormat) => {
-      track('click_download_png', { address, format });
-      
-      // Set the format so the component re-renders with the correct dimensions
-      setImageFormat(format);
-      localStorage.setItem('imageFormatPreference', format);
-
-      setIsDownloadingPng(true);
-
-      // We need a short delay to allow React to re-render the ShareCard with the new dimensions
-      await new Promise(resolve => setTimeout(resolve, 50));
-
-      if (!shareCardRef.current) {
-          setIsDownloadingPng(false);
-          return;
-      };
-
-      try {
-        const dataUrl = await toPng(shareCardRef.current, { 
-            cacheBust: true, 
-            quality: 0.95,
-            pixelRatio: 2,
-        });
-        const link = document.createElement("a");
-        link.download = generateFilename('png');
-        link.href = dataUrl;
-        link.click();
-        
-        toast({
-            title: "Success!",
-            description: `Image downloaded successfully.`,
-        });
-        track('download_png_success', { address, format });
-
-      } catch (err) {
-        console.error("Failed to download PNG", err);
-        toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to generate image. Please try again.",
-          });
-        track('download_png_failed', { address, format, error: err instanceof Error ? err.message : String(err) });
-      } finally {
-        setIsDownloadingPng(false);
-      }
-    };
-
 
     if (!personalityData) {
         return (
@@ -214,8 +86,6 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
-        <ShareCard ref={shareCardRef} result={result} address={address} format={imageFormat} dimensions={IMAGE_FORMAT_CONFIG[imageFormat]} />
-        <PdfCard ref={pdfCardRef} result={result} address={address} />
         <TooltipProvider>
             <div className="space-y-10">
                 <header className="text-center space-y-4">
@@ -352,39 +222,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
-                    
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="lg" disabled={isDownloadingPng}>
-                                {isDownloadingPng ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
-                                {isDownloadingPng ? "Generating..." : "Download Image"}
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleDownloadPng('Social')} disabled={isDownloadingPng}>
-                                <span className="flex-grow">Social Card (1200x630)</span>
-                                {imageFormat === 'Social' && <Check className="h-4 w-4" />}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownloadPng('Square')} disabled={isDownloadingPng}>
-                                <span className="flex-grow">Instagram Post (1080x1080)</span>
-                                {imageFormat === 'Square' && <Check className="h-4 w-4" />}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDownloadPng('Story')} disabled={isDownloadingPng}>
-                                <span className="flex-grow">Instagram Story (1080x1920)</span>
-                                {imageFormat === 'Story' && <Check className="h-4 w-4" />}
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <Button variant="outline" size="lg" onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
-                        {isDownloadingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                        {isDownloadingPdf ? "Generating..." : "Download PDF"}
-                    </Button>
                 </div>
             </div>
       </TooltipProvider>
     </div>
   );
 }
-
-    

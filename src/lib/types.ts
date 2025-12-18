@@ -90,4 +90,3 @@ export interface EtherscanResponse<T> {
     wallet2: AnalysisResult | null;
   }
   
-  export type ImageFormat = 'Social' | 'Square' | 'Story';
