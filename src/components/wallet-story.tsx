@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown, Check } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown, Check, Loader2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -11,11 +11,7 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-    DropdownMenuSeparator,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger
-  } from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu"
 import {
     Collapsible,
     CollapsibleContent,
@@ -156,7 +152,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         
         toast({
             title: "Success!",
-            description: `PNG Image (${format}) downloaded successfully.`,
+            description: `Image downloaded successfully.`,
         });
         track('download_png_success', { address, format });
 
@@ -345,55 +341,39 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+                    
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="lg" disabled={isDownloadingPng || isDownloadingPdf}>
-                                <Download className="mr-2 h-4 w-4" />
-                                Download
+                            <Button variant="outline" size="lg" disabled={isDownloadingPng}>
+                                {isDownloadingPng ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Camera className="mr-2 h-4 w-4" />}
+                                {isDownloadingPng ? "Generating..." : "Download Image"}
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuSub>
-                                <DropdownMenuSubTrigger disabled={isDownloadingPng}>
-                                    <Camera className="mr-2 h-4 w-4" />
-                                    <span>Image (PNG)</span>
-                                </DropdownMenuSubTrigger>
-                                <DropdownMenuSubContent>
-                                    <DropdownMenuItem onClick={() => handleDownloadPng('Social')} disabled={isDownloadingPng}>
-                                        <span className="flex-grow">Social Card (1200x630)</span>
-                                        {imageFormat === 'Social' && <Check className="h-4 w-4" />}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDownloadPng('Square')} disabled={isDownloadingPng}>
-                                        <span className="flex-grow">Instagram Post (1080x1080)</span>
-                                        {imageFormat === 'Square' && <Check className="h-4 w-4" />}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDownloadPng('Story')} disabled={isDownloadingPng}>
-                                        <span className="flex-grow">Instagram Story (1080x1920)</span>
-                                        {imageFormat === 'Story' && <Check className="h-4 w-4" />}
-                                    </DropdownMenuItem>
-                                </DropdownMenuSubContent>
-                            </DropdownMenuSub>
-                            <DropdownMenuItem onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
-                                {isDownloadingPdf ? (
-                                    <div className="flex items-center">
-                                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Generating...
-                                    </div>
-                                ) : (
-                                    <>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        <span>Full Report (PDF)</span>
-                                    </>
-                                )}
+                            <DropdownMenuItem onClick={() => handleDownloadPng('Social')} disabled={isDownloadingPng}>
+                                <span className="flex-grow">Social Card (1200x630)</span>
+                                {imageFormat === 'Social' && <Check className="h-4 w-4" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadPng('Square')} disabled={isDownloadingPng}>
+                                <span className="flex-grow">Instagram Post (1080x1080)</span>
+                                {imageFormat === 'Square' && <Check className="h-4 w-4" />}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDownloadPng('Story')} disabled={isDownloadingPng}>
+                                <span className="flex-grow">Instagram Story (1080x1920)</span>
+                                {imageFormat === 'Story' && <Check className="h-4 w-4" />}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
+
+                    <Button variant="outline" size="lg" onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
+                        {isDownloadingPdf ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                        {isDownloadingPdf ? "Generating..." : "Download PDF"}
+                    </Button>
                 </div>
             </div>
       </TooltipProvider>
     </div>
   );
 }
+
+    
