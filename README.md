@@ -2,7 +2,7 @@
 
 Turn any Ethereum wallet address into a human-readable, story-like explanation using AI. This open-source web app uses the Etherscan API to fetch wallet data and Google's Gemini AI to generate an engaging narrative.
 
-![Wallet Story Explorer Screenshot](https://i.imgur.com/example.png)
+![Wallet Story Explorer Screenshot](https://placehold.co/1200x630/262626/e0e0e0/png?text=Wallet%20Story%20Explorer)
 
 ## Features
 
