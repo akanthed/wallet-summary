@@ -28,6 +28,9 @@ async function fetchEtherscan<T>(params: Record<string, string>): Promise<T> {
     if (errorData.message === 'No transactions found') {
         return [] as unknown as T;
     }
+    if (errorData.message === 'NOTOK' && errorData.result.includes('Invalid API Key')) {
+        throw new Error("Invalid Etherscan API Key. Please check your .env.local file.");
+    }
     throw new Error(`Etherscan API error: ${errorData.message} - ${errorData.result}`);
   }
 
