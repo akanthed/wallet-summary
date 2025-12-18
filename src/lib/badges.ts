@@ -3,31 +3,31 @@ import { Badge, EtherscanTx, EtherscanTokenTx, EtherscanNftTx } from '@/lib/type
 
 const badgeDefinitions: Badge[] = [
     // Activity Badges
-    { id: 'first_steps', name: 'First Steps', description: 'Completed your first transaction.', icon: 'Footprints', category: 'activity' },
-    { id: 'century_club', name: 'Century Club', description: 'Made over 100 transactions.', icon: 'Award', category: 'activity' },
-    { id: 'active_trader', name: 'Active Trader', description: 'Made over 1,000 transactions.', icon: 'Repeat', category: 'activity' },
-    { id: 'lightning_fast', name: 'Lightning Fast', description: 'Made 10+ transactions in a single day.', icon: 'Zap', category: 'activity' },
-    { id: 'night_owl', name: 'Night Owl', description: 'Most transactions were made between midnight and 6am UTC.', icon: 'Moon', category: 'activity' },
+    { id: 'first_steps', name: 'First Steps', description: 'Completed your first transaction.', icon: 'Footprints', category: 'activity', rarity: 'Common' },
+    { id: 'century_club', name: 'Century Club', description: 'Made over 100 transactions.', icon: 'Award', category: 'activity', rarity: 'Rare' },
+    { id: 'active_trader', name: 'Active Trader', description: 'Made over 1,000 transactions.', icon: 'Repeat', category: 'activity', rarity: 'Epic' },
+    { id: 'lightning_fast', name: 'Lightning Fast', description: 'Made 10+ transactions in a single day.', icon: 'Zap', category: 'activity', rarity: 'Rare' },
+    { id: 'night_owl', name: 'Night Owl', description: 'Most transactions were made between midnight and 6am UTC.', icon: 'Moon', category: 'activity', rarity: 'Rare' },
     
     // Wealth Badges
-    { id: 'baby_whale', name: 'Baby Whale', description: 'Current balance is over 1 ETH.', icon: 'Gem', category: 'wealth' },
-    { id: 'whale', name: 'Whale', description: 'Current balance is over 10 ETH.', icon: 'Crown', category: 'wealth' },
-    { id: 'mega_whale', name: 'Mega Whale', description: 'Current balance is over 100 ETH.', icon: 'Trophy', category: 'wealth' },
-    { id: 'portfolio_pro', name: 'Portfolio Pro', description: 'Holds 10+ different types of tokens.', icon: 'Briefcase', category: 'wealth' },
+    { id: 'baby_whale', name: 'Baby Whale', description: 'Current balance is over 1 ETH.', icon: 'Gem', category: 'wealth', rarity: 'Common' },
+    { id: 'whale', name: 'Whale', description: 'Current balance is over 10 ETH.', icon: 'Crown', category: 'wealth', rarity: 'Rare' },
+    { id: 'mega_whale', name: 'Mega Whale', description: 'Current balance is over 100 ETH.', icon: 'Trophy', category: 'wealth', rarity: 'Epic' },
+    { id: 'portfolio_pro', name: 'Portfolio Pro', description: 'Holds 10+ different types of tokens.', icon: 'Briefcase', category: 'wealth', rarity: 'Rare' },
 
     // Time Badges
-    { id: 'og', name: 'OG', description: 'Wallet is over 3 years old.', icon: 'Cake', category: 'time' },
-    { id: 'early_adopter', name: 'Early Adopter', description: 'Wallet was created before 2020.', icon: 'Clock', category: 'time' },
-    { id: 'veteran', name: 'Veteran', description: 'Wallet has been active for over 2 years.', icon: 'Shield', category: 'time' },
+    { id: 'og', name: 'OG', description: 'Wallet is over 3 years old.', icon: 'Cake', category: 'time', rarity: 'Epic' },
+    { id: 'early_adopter', name: 'Early Adopter', description: 'Wallet was created before 2020.', icon: 'Clock', category: 'time', rarity: 'Epic' },
+    { id: 'veteran', name: 'Veteran', description: 'Wallet has been active for over 2 years.', icon: 'Shield', category: 'time', rarity: 'Rare' },
 
     // NFT Badges
-    { id: 'nft_enthusiast', name: 'NFT Enthusiast', description: 'Owns 10+ NFTs.', icon: 'Image', category: 'nft' },
-    { id: 'art_collector', name: 'Art Collector', description: 'Owns 50+ NFTs.', icon: 'Paintbrush2', category: 'nft' },
-    { id: 'blue_chip', name: 'Blue Chip Collector', description: 'Owns a blue-chip NFT (e.g., from BAYC or CryptoPunks).', icon: '💎', category: 'nft' },
+    { id: 'nft_enthusiast', name: 'NFT Enthusiast', description: 'Owns 10+ NFTs.', icon: 'Image', category: 'nft', rarity: 'Rare' },
+    { id: 'art_collector', name: 'Art Collector', description: 'Owns 50+ NFTs.', icon: 'Paintbrush2', category: 'nft', rarity: 'Epic' },
+    { id: 'blue_chip', name: 'Blue Chip Collector', description: 'Owns a blue-chip NFT (e.g., from BAYC or CryptoPunks).', icon: '💎', category: 'nft', rarity: 'Legendary' },
 
     // Special Badges
-    { id: 'explorer', name: 'Explorer', description: 'Interacted with 20+ different smart contracts.', icon: 'Compass', category: 'special' },
-    { id: 'generous', name: 'Generous', description: 'Sent transactions to 50+ different addresses.', icon: 'Gift', category: 'special' },
+    { id: 'explorer', name: 'Explorer', description: 'Interacted with 20+ different smart contracts.', icon: 'Compass', category: 'special', rarity: 'Rare' },
+    { id: 'generous', name: 'Generous', description: 'Sent transactions to 50+ different addresses.', icon: 'Gift', category: 'special', rarity: 'Epic' },
 ];
 
 // Simplified mapping of blue chip NFT contract addresses

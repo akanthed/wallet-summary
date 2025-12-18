@@ -69,7 +69,8 @@ export interface EtherscanResponse<T> {
     name: string;
     description: string;
     icon: string; // Lucide icon name
-    category: 'activity' | 'wealth' | 'time' | 'nft' | 'defi' | 'special';
+    category: 'activity' | 'wealth' | 'time' | 'nft' | 'special';
+    rarity: 'Common' | 'Rare' | 'Epic' | 'Legendary';
   }
 
   export interface AnalysisResult {
