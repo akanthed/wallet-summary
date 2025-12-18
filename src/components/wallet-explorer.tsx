@@ -16,11 +16,11 @@ export function WalletExplorer() {
   const [address, setAddress] = useState("");
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const { toast } = useToast();
 
-  const handleAnalyze = async () => {
-    if (!WALLET_ADDRESS_REGEX.test(address)) {
+  const handleAnalyze = async (walletAddress = address) => {
+    if (!WALLET_ADDRESS_REGEX.test(walletAddress)) {
       toast({
         title: "Invalid Address",
         description: "Please enter a valid Ethereum address (e.g., 0x...)",
@@ -36,7 +36,7 @@ export function WalletExplorer() {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ address }),
+        body: JSON.stringify({ address: walletAddress }),
       });
 
       if (!response.ok) {
@@ -63,7 +63,7 @@ export function WalletExplorer() {
   const handleExampleWallet = () => {
     setAddress(EXAMPLE_WALLET);
     startTransition(() => {
-      handleAnalyze();
+      handleAnalyze(EXAMPLE_WALLET);
     });
   };
 
@@ -77,7 +77,7 @@ export function WalletExplorer() {
   }
 
   if (result) {
-    return <WalletStory result={result} onReset={handleReset} />;
+    return <WalletStory result={result} onReset={handleReset} address={address} />;
   }
 
   return (
@@ -103,8 +103,8 @@ export function WalletExplorer() {
                         />
                         <Button 
                             className="absolute right-1.5 top-1.5 h-9"
-                            onClick={handleAnalyze}
-                            disabled={isPending || isLoading}
+                            onClick={() => handleAnalyze()}
+                            disabled={isLoading}
                         >
                             Explore <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -113,7 +113,7 @@ export function WalletExplorer() {
                 <div className="mt-4">
                     <p className="text-sm text-muted-foreground">
                         or try{" "}
-                        <button onClick={() => { setAddress(EXAMPLE_WALLET); }} className="font-medium text-primary underline-offset-4 hover:underline">
+                        <button onClick={handleExampleWallet} className="font-medium text-primary underline-offset-4 hover:underline">
                             Vitalik&apos;s wallet
                         </button>
                     </p>

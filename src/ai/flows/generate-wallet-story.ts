@@ -25,7 +25,7 @@ export type GenerateWalletStoryInput = z.infer<typeof GenerateWalletStoryInputSc
 
 const GenerateWalletStoryOutputSchema = z.object({
   personality: z.string().describe('The personality of the wallet (emoji + label).'),
-  story: z.string().describe('The AI-generated story about the wallet.'),
+  story: z.string().describe('The AI-generated story about the wallet, formatted into 2-3 paragraphs separated by newline characters (\\n).'),
 });
 export type GenerateWalletStoryOutput = z.infer<typeof GenerateWalletStoryOutputSchema>;
 
@@ -49,7 +49,7 @@ WALLET DATA:
 - NFT activity: {{#if nftSummary}}{{nftSummary}}{{else}}No NFT activity detected{{/if}}
 
 TASK:
-1. Choose ONE personality that best fits this wallet from: Whale, Diamond Hands, NFT Collector, Active Trader, Newbie Explorer, Dormant Wallet, DeFi Farmer
+1. Choose ONE personality that best fits this wallet from: Whale, Diamond Hands, NFT Collector, Active Trader, Newbie Explorer, Dormant Wallet, DeFi Farmer.
 2. Write a 2-3 paragraph story explaining:
    - When and how this wallet started (include relevant crypto history context if dates align with major events)
    - What patterns or behavior define this wallet
@@ -57,10 +57,10 @@ TASK:
    - Current status and activity level
 
 TONE: Friendly, curious, storytelling (not financial advice)
-FORMAT: Return JSON:
+FORMAT: Return JSON. The 'story' field must contain 2-3 paragraphs separated by a newline character (\\n).
 {
   "personality": "emoji label",
-  "story": "full story text"
+  "story": "Paragraph 1...\\nParagraph 2..."
 }`,
 });
 

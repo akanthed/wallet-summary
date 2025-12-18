@@ -1,10 +1,11 @@
 "use client";
 
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useEffect, useState } from "react";
+import { Icons } from "./icons";
 
 const progressSteps = [
+  "Connecting to the blockchain...",
   "Fetching wallet data...",
   "Analyzing on-chain patterns...",
   "Generating your wallet story...",
@@ -16,42 +17,35 @@ export function LoadingState() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentStep((prevStep) => (prevStep + 1) % progressSteps.length);
-    }, 2500);
+      setCurrentStep((prevStep) => {
+        if (prevStep >= progressSteps.length -1) {
+            clearInterval(interval);
+            return prevStep;
+        }
+        return prevStep + 1;
+      });
+    }, 1500);
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <div className="container py-12 px-4 md:px-6">
-      <div className="mx-auto max-w-3xl animate-pulse">
-        <div className="space-y-8">
-          <Skeleton className="mx-auto h-12 w-48 rounded-full" />
-
-          <div className="space-y-4">
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-3/4" />
-            <Skeleton className="h-6 w-full" />
-            <Skeleton className="h-6 w-5/6" />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            {[...Array(4)].map((_, i) => (
-              <Card key={i}>
-                <CardHeader className="pb-2">
-                  <Skeleton className="h-4 w-2/3" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-1/2" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="flex justify-center pt-4">
-            <p className="text-sm text-muted-foreground transition-all duration-300">
+    <div className="container py-12 px-4 md:px-6 flex items-center justify-center min-h-[60vh]">
+      <div className="mx-auto max-w-md text-center">
+        <div className="space-y-4">
+            <Icons.logo className="h-16 w-16 text-primary animate-pulse mx-auto" />
+            <h2 className="text-2xl font-headline font-semibold">Crafting Your Story</h2>
+            <p className="text-muted-foreground">
+                Please wait while we analyze the wallet&apos;s journey on the blockchain.
+            </p>
+        </div>
+        <div className="relative pt-10">
+            <div className="w-full bg-muted rounded-full h-2.5">
+                <div className="bg-primary h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep + 1) * (100 / progressSteps.length)}%` }}></div>
+            </div>
+            <p className="text-sm text-muted-foreground mt-3 transition-all duration-300">
               {progressSteps[currentStep]}
             </p>
-          </div>
         </div>
       </div>
     </div>
