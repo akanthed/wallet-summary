@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import * as etherscan from "@/lib/etherscan";
 import { generateWalletPersonality } from "@/ai/flows/generate-wallet-personality";
-import { WalletStats, AnalysisResult } from "@/lib/types";
+import { generateTimelineEvents } from "@/ai/flows/generate-timeline-events";
+import { WalletStats, AnalysisResult, EtherscanTx, EtherscanTokenTx, EtherscanNftTx } from "@/lib/types";
 import { getCachedResult, setCachedResult } from "@/lib/cache";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -41,6 +42,41 @@ function createRecentActivitySummary(transactions: any[], daysSinceLastTx: numbe
     }
     const recentTx = transactions.slice(-10);
     return `Last ${recentTx.length} transactions happened in the last ${daysSinceLastTx} days.`;
+}
+
+function summarizeTransactionsForAI(transactions: EtherscanTx[], tokens: EtherscanTokenTx[], nfts: EtherscanNftTx[]): string {
+    let summary = '';
+    const txCount = transactions.length;
+
+    if (txCount > 0) {
+        const firstTxDate = new Date(parseInt(transactions[0].timeStamp) * 1000).toLocaleDateString();
+        const lastTxDate = new Date(parseInt(transactions[txCount-1].timeStamp) * 1000).toLocaleDateString();
+        summary += `Total Transactions: ${txCount} (from ${firstTxDate} to ${lastTxDate})\n`;
+
+        const sampleTxs = transactions.slice(0, 5); // get first 5
+        summary += 'Sample Transactions:\n';
+        sampleTxs.forEach(tx => {
+            const date = new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString();
+            const value = (parseInt(tx.value) / 1e18).toFixed(4);
+            summary += `- Date: ${date}, To: ${tx.to.slice(0,10)}..., Value: ${value} ETH\n`;
+        });
+    }
+
+    if (tokens.length > 0) {
+        summary += `\nFound ${tokens.length} token transfers. First 5:\n`;
+        tokens.slice(0, 5).forEach(tx => {
+            summary += `- Token: ${tx.tokenSymbol}, To: ${tx.to.slice(0,10)}...\n`;
+        });
+    }
+
+    if (nfts.length > 0) {
+        summary += `\nFound ${nfts.length} NFT transfers. First 5:\n`;
+        nfts.slice(0, 5).forEach(tx => {
+            summary += `- NFT: ${tx.tokenName} #${tx.tokenID.slice(0,5)}..., To: ${tx.to.slice(0,10)}...\n`;
+        });
+    }
+
+    return summary;
 }
 
 async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
@@ -94,7 +130,12 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
           recentActivitySummary: createRecentActivitySummary(transactions, daysSinceLastTx),
         };
         
-        const personalityResult = await generateWalletPersonality(aiInput);
+        const transactionSummaryForAI = summarizeTransactionsForAI(transactions, tokenTransfers, nftTransfers);
+    
+        const [personalityResult, timelineEvents] = await Promise.all([
+            generateWalletPersonality(aiInput),
+            generateTimelineEvents({ transactionSummary: transactionSummaryForAI }),
+        ]);
 
         const stats: WalletStats = {
           walletAge: walletAgeInDays,
@@ -110,6 +151,7 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
             stats: stats,
             limitedData: limitedData,
             personalityData: personalityResult,
+            timelineEvents: timelineEvents,
         };
 
         setCachedResult(address, result);
@@ -158,5 +200,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status });
   }
 }
-
-    

@@ -53,6 +53,14 @@ export interface EtherscanResponse<T> {
     personalityStory: string;
   }
 
+  export type TimelineEvent = {
+    date: string;
+    type: 'Creation' | 'Transaction' | 'NFT' | 'Token' | 'Activity' | 'Milestone';
+    title: string;
+    description: string;
+    value?: string;
+  }
+
   export interface AnalysisResult {
     personality: string;
     story: string;
@@ -60,6 +68,7 @@ export interface EtherscanResponse<T> {
     stats: WalletStats;
     limitedData: boolean;
     personalityData: PersonalityData;
+    timelineEvents: TimelineEvent[];
   }
   
   export type ComparisonResult = {
