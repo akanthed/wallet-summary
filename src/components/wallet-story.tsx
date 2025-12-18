@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
 import { PersonalityBadge } from "./personality-badge";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, CheckCircle2 } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, CheckCircle2, User, Sparkles, Pencil } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
   } from "@/components/ui/dropdown-menu"
+import { Badge } from "./ui/badge";
 
 type WalletStoryProps = {
   result: AnalysisResult;
@@ -25,6 +26,7 @@ function formatAddress(address: string) {
 
 export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { toast } = useToast();
+    const { personalityData } = result;
 
     const handleCopyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -33,52 +35,44 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         });
       };
     
-    const storyParagraphs = result.story.split('\n').filter(p => p.trim().length > 0);
+    const fullStoryText = `${personalityData.personalityTitle}\n${personalityData.oneLineSummary}\n\nTraits:\n- ${personalityData.traits.join('\n- ')}\n\n${personalityData.personalityStory}`;
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <TooltipProvider>
             <div className="space-y-10">
-                <PersonalityBadge personality={result.personality} />
-
-                <div className="prose prose-lg dark:prose-invert mx-auto text-foreground/90">
-                {storyParagraphs.map((paragraph, index) => (
-                    <p key={index} className="whitespace-pre-wrap font-body leading-relaxed animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: `${100 * index}ms`}}>
-                        {paragraph.includes(address) ? (
-                            <>
-                                {paragraph.split(address)[0]}
-                                <Tooltip>
-                                    <TooltipTrigger asChild>
-                                        <span className="font-mono text-primary cursor-pointer" onClick={() => handleCopyToClipboard(address)}>
-                                            {formatAddress(address)}
-                                        </span>
-                                    </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Click to copy full address</p>
-                                    </TooltipContent>
-                                </Tooltip>
-                                {paragraph.split(address)[1]}
-                            </>
-                        ) : (
-                            paragraph
-                        )}
+                <header className="text-center space-y-4">
+                    <h1 className="text-4xl font-headline font-bold text-foreground">
+                        {personalityData.personalityTitle}
+                    </h1>
+                    <p className="text-xl text-muted-foreground font-light">
+                        {personalityData.oneLineSummary}
                     </p>
-                ))}
+                </header>
+
+                <div className="bg-card border rounded-lg p-6 space-y-6 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '100ms'}}>
+                    <div className="flex items-center gap-3">
+                        <User className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-headline font-semibold">Personality Traits</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-3">
+                        {personalityData.traits.map((trait, index) => (
+                            <Badge key={index} variant="secondary" className="text-base px-4 py-2">{trait}</Badge>
+                        ))}
+                    </div>
                 </div>
 
-                {result.highlights && result.highlights.length > 0 && (
-                  <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '300ms'}}>
-                    <h3 className="text-2xl font-headline font-semibold text-center">Key Highlights</h3>
-                    <ul className="space-y-3">
-                      {result.highlights.map((highlight, index) => (
-                        <li key={index} className="flex items-start gap-3">
-                          <CheckCircle2 className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                          <span className="text-foreground/90">{highlight}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '200ms'}}>
+                    <div className="flex items-center gap-3">
+                        <Pencil className="h-5 w-5 text-primary" />
+                        <h3 className="text-lg font-headline font-semibold">Personality Story</h3>
+                    </div>
+                    <div className="prose prose-lg dark:prose-invert text-foreground/90 max-w-none">
+                        <p className="whitespace-pre-wrap font-body leading-relaxed">
+                            {personalityData.personalityStory}
+                        </p>
+                    </div>
+                </div>
 
                 {result.limitedData && (
                 <p className="text-center text-sm text-muted-foreground">
@@ -89,34 +83,34 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 <Separator />
 
                 <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-                <StatsCard
-                    title="Wallet Age"
-                    value={`${result.stats.walletAge} days`}
-                    icon={CalendarDays}
-                    className="animate-in fade-in-0 zoom-in-95 duration-500"
-                    style={{animationDelay: '100ms'}}
-                />
-                <StatsCard
-                    title="Total Transactions"
-                    value={result.stats.txCount}
-                    icon={Repeat}
-                    className="animate-in fade-in-0 zoom-in-95 duration-500"
-                    style={{animationDelay: '200ms'}}
-                />
-                <StatsCard
-                    title="ETH Balance"
-                    value={`${result.stats.balance} ETH`}
-                    icon={Wallet}
-                    className="animate-in fade-in-0 zoom-in-95 duration-500"
-                    style={{animationDelay: '300ms'}}
-                />
-                <StatsCard
-                    title="Activity"
-                    value={result.stats.activityStatus}
-                    icon={Activity}
-                    className="animate-in fade-in-0 zoom-in-95 duration-500"
-                    style={{animationDelay: '400ms'}}
-                />
+                    <StatsCard
+                        title="Wallet Age"
+                        value={`${result.stats.walletAge} days`}
+                        icon={CalendarDays}
+                        className="animate-in fade-in-0 zoom-in-95 duration-500"
+                        style={{animationDelay: '100ms'}}
+                    />
+                    <StatsCard
+                        title="Total Transactions"
+                        value={result.stats.txCount}
+                        icon={Repeat}
+                        className="animate-in fade-in-0 zoom-in-95 duration-500"
+                        style={{animationDelay: '200ms'}}
+                    />
+                    <StatsCard
+                        title="ETH Balance"
+                        value={`${result.stats.balance} ETH`}
+                        icon={Wallet}
+                        className="animate-in fade-in-0 zoom-in-95 duration-500"
+                        style={{animationDelay: '300ms'}}
+                    />
+                    <StatsCard
+                        title="Activity"
+                        value={result.stats.activityStatus}
+                        icon={Activity}
+                        className="animate-in fade-in-0 zoom-in-95 duration-500"
+                        style={{animationDelay: '400ms'}}
+                    />
                 </div>
 
                 <div className="flex justify-center items-center gap-4 pt-6">
@@ -128,7 +122,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => handleCopyToClipboard(result.story)}>
+                            <DropdownMenuItem onClick={() => handleCopyToClipboard(fullStoryText)}>
                                 <Copy className="mr-2 h-4 w-4" />
                                 <span>Copy Story Text</span>
                             </DropdownMenuItem>

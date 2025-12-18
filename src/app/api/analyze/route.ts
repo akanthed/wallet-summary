@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import * as etherscan from "@/lib/etherscan";
-import { generateWalletStory } from "@/ai/flows/generate-wallet-story";
+import { generateWalletPersonality } from "@/ai/flows/generate-wallet-personality";
 import { WalletStats } from "@/lib/types";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
@@ -23,6 +23,14 @@ function createSummary(items: any[], type: 'token' | 'nft'): string {
       return `Transferred ${items.length} NFT(s) from ${uniqueCollections.size} different collection(s).`;
     }
     return "No activity detected";
+}
+
+function createRecentActivitySummary(transactions: any[], daysSinceLastTx: number): string {
+    if (daysSinceLastTx > 90) {
+        return "Wallet has been inactive for a while.";
+    }
+    const recentTx = transactions.slice(-10);
+    return `Last ${recentTx.length} transactions happened in the last ${daysSinceLastTx} days.`;
 }
 
 export async function POST(request: Request) {
@@ -83,11 +91,12 @@ export async function POST(request: Request) {
       balance: parseFloat(balanceEth.toFixed(4)),
       tokenSummary: createSummary(tokenTransfers, 'token'),
       nftSummary: createSummary(nftTransfers, 'nft'),
-      walletAge: walletAgeInDays,
+      walletAgeInDays: walletAgeInDays,
+      recentActivitySummary: createRecentActivitySummary(transactions, daysSinceLastTx),
     };
     
     // Generate story with AI
-    const storyResult = await generateWalletStory(aiInput);
+    const personalityResult = await generateWalletPersonality(aiInput);
 
     const stats: WalletStats = {
       walletAge: walletAgeInDays,
@@ -95,14 +104,21 @@ export async function POST(request: Request) {
       balance: balanceEth.toFixed(4),
       activityStatus: activityStatus,
     };
+    
+    // Transform the new AI output to the existing AnalysisResult structure
+    // This is a temporary step until the UI is fully updated to handle both modes
+    const analysisResult = {
+        personality: `${personalityResult.personalityTitle}`, // Using title as the main personality
+        story: `${personalityResult.oneLineSummary}\n\n${personalityResult.personalityStory}`,
+        highlights: personalityResult.traits,
+        stats: stats,
+        limitedData: limitedData,
+        // include raw personality data for the new UI
+        personalityData: personalityResult,
+    }
 
-    return NextResponse.json({
-      personality: storyResult.personality,
-      story: storyResult.story,
-      highlights: storyResult.highlights,
-      stats: stats,
-      limitedData: limitedData
-    });
+
+    return NextResponse.json(analysisResult);
 
   } catch (error) {
     console.error("Analysis API Error:", error);

@@ -46,11 +46,19 @@ export interface EtherscanResponse<T> {
     activityStatus: 'Active' | 'Moderate' | 'Dormant';
   }
   
+  export type PersonalityData = {
+    personalityTitle: string;
+    oneLineSummary: string;
+    traits: string[];
+    personalityStory: string;
+  }
+
   export interface AnalysisResult {
     personality: string;
     story: string;
     highlights: string[];
     stats: WalletStats;
     limitedData: boolean;
+    personalityData: PersonalityData;
   }
   
