@@ -62,3 +62,10 @@ export interface EtherscanResponse<T> {
     personalityData: PersonalityData;
   }
   
+  export type ComparisonResult = {
+    wallet1: AnalysisResult | null;
+    wallet2: AnalysisResult | null;
+  }
+  
+
+    

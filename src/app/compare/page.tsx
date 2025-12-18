@@ -24,8 +24,8 @@ function isValidAddress(address: string): boolean {
 }
 
 type ComparisonResult = {
-    wallet1: AnalysisResult;
-    wallet2: AnalysisResult;
+    wallet1: AnalysisResult | null;
+    wallet2: AnalysisResult | null;
 }
 
 function WalletComparisonResult({ result, address1, address2 }: { result: ComparisonResult, address1: string, address2: string }) {
@@ -35,7 +35,10 @@ function WalletComparisonResult({ result, address1, address2 }: { result: Compar
             return (
                 <Card className="flex-1 w-full flex items-center justify-center min-h-[300px]">
                     <CardContent className="p-6 text-center">
-                        <p className="text-muted-foreground">No data for this wallet.</p>
+                        <XCircle className="h-8 w-8 text-destructive mx-auto mb-4" />
+                        <CardTitle className="text-lg mb-2">Analysis Failed</CardTitle>
+                        <p className="text-muted-foreground">No data found for this wallet. Please check the address.</p>
+                        <p className="text-xs text-muted-foreground mt-2 truncate">{address}</p>
                     </CardContent>
                 </Card>
             )
@@ -64,7 +67,7 @@ function WalletComparisonResult({ result, address1, address2 }: { result: Compar
                     <div className="grid grid-cols-2 gap-4 text-left">
                        <StatsCard title="Age" value={`${stats.walletAge} days`} icon={CalendarDays} className="text-xs"/>
                        <StatsCard title="TXs" value={stats.txCount} icon={Repeat} />
-                       <StatsCard title="Balance" value={`${stats.balance} ETH`} icon={Wallet} />
+                       <StatsCard title="Balance" value={`${parseFloat(stats.balance).toFixed(4)} ETH`} icon={Wallet} />
                        <StatsCard title="Activity" value={stats.activityStatus} icon={Activity} />
                     </div>
                 </CardContent>
@@ -102,8 +105,8 @@ export default function ComparePage() {
     }, [addresses]);
     
     const canCompare = useMemo(() => {
-        return isValidAddress(addresses.wallet1) && isValidAddress(addresses.wallet2) && !isPending;
-    }, [addresses, isPending]);
+        return isValidAddress(addresses.wallet1) && isValidAddress(addresses.wallet2) && !isPending && !isLoading;
+    }, [addresses, isPending, isLoading]);
 
 
     useEffect(() => {
@@ -116,17 +119,16 @@ export default function ComparePage() {
 
         const newAddresses = { wallet1: "", wallet2: "" };
         let shouldAnalyze = false;
+
         if (address1FromUrl && isValidAddress(address1FromUrl)) {
             newAddresses.wallet1 = address1FromUrl;
-            shouldAnalyze = true;
         }
         if (address2FromUrl && isValidAddress(address2FromUrl)) {
             newAddresses.wallet2 = address2FromUrl;
-            shouldAnalyze = true;
         }
         setAddresses(newAddresses);
 
-        if (shouldAnalyze && isValidAddress(newAddresses.wallet1) && isValidAddress(newAddresses.wallet2)) {
+        if (newAddresses.wallet1 && newAddresses.wallet2) {
             startTransition(() => {
                 handleCompare(newAddresses.wallet1, newAddresses.wallet2);
             });
@@ -200,7 +202,11 @@ export default function ComparePage() {
               <main className="flex-1">
                 <WalletComparisonResult result={result} address1={addresses.wallet1} address2={addresses.wallet2} />
                 <div className="text-center pb-16">
-                    <Button onClick={() => setResult(null)} size="lg">Start New Comparison</Button>
+                    <Button onClick={() => {
+                        setResult(null);
+                        setAddresses({ wallet1: "", wallet2: "" });
+                        window.history.pushState({}, '', '/compare');
+                    }} size="lg">Start New Comparison</Button>
                 </div>
               </main>
               <Footer />
@@ -224,28 +230,50 @@ export default function ComparePage() {
                     
                     <div className="mt-10 flex flex-col items-center justify-center gap-6">
                         <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input
-                                type="text"
-                                placeholder="Wallet 1: 0x... or name.eth"
-                                className={`h-12 w-full text-center ${!addresses.wallet1 || isValidAddress(addresses.wallet1) ? '' : 'border-destructive'}`}
-                                value={addresses.wallet1}
-                                onChange={(e) => handleAddressChange('wallet1', e.target.value)}
-                                disabled={!rateLimit.allowed || isPending || isLoading}
-                            />
-                            <Input
-                                type="text"
-                                placeholder="Wallet 2: 0x... or name.eth"
-                                className={`h-12 w-full text-center ${!addresses.wallet2 || isValidAddress(addresses.wallet2) ? '' : 'border-destructive'}`}
-                                value={addresses.wallet2}
-                                onChange={(e) => handleAddressChange('wallet2', e.target.value)}
-                                disabled={!rateLimit.allowed || isPending || isLoading}
-                            />
+                            <div className="relative">
+                                <Input
+                                    type="text"
+                                    placeholder="Wallet 1: 0x... or name.eth"
+                                    className={`h-12 w-full text-center sm:text-left pr-10 ${!addresses.wallet1 || isValidAddress(addresses.wallet1) ? '' : 'border-destructive'}`}
+                                    value={addresses.wallet1}
+                                    onChange={(e) => handleAddressChange('wallet1', e.target.value)}
+                                    disabled={!rateLimit.allowed || isPending || isLoading}
+                                />
+                                {addresses.wallet1 && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {isValidAddress(addresses.wallet1) ? (
+                                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                    ) : (
+                                        <XCircle className="h-5 w-5 text-destructive" />
+                                    )}
+                                    </div>
+                                )}
+                            </div>
+                            <div className="relative">
+                                <Input
+                                    type="text"
+                                    placeholder="Wallet 2: 0x... or name.eth"
+                                    className={`h-12 w-full text-center sm:text-left pr-10 ${!addresses.wallet2 || isValidAddress(addresses.wallet2) ? '' : 'border-destructive'}`}
+                                    value={addresses.wallet2}
+                                    onChange={(e) => handleAddressChange('wallet2', e.target.value)}
+                                    disabled={!rateLimit.allowed || isPending || isLoading}
+                                />
+                                {addresses.wallet2 && (
+                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                    {isValidAddress(addresses.wallet2) ? (
+                                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                                    ) : (
+                                        <XCircle className="h-5 w-5 text-destructive" />
+                                    )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                         <Button 
                             size="lg"
                             className="w-full max-w-xs"
                             onClick={() => handleCompare()}
-                            disabled={!canCompare || isLoading}
+                            disabled={!canCompare}
                         >
                             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Users className="mr-2 h-4 w-4" />}
                             {isLoading ? 'Comparing...' : 'Compare Wallets'}
@@ -273,3 +301,5 @@ export default function ComparePage() {
         </div>
     );
 }
+
+    
