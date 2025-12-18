@@ -87,5 +87,3 @@ export interface EtherscanResponse<T> {
     wallet2: AnalysisResult | null;
   }
   
-
-    

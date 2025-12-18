@@ -6,7 +6,7 @@ const badgeDefinitions: Badge[] = [
     { id: 'century_club', name: 'Century Club', description: 'Made over 100 transactions.', icon: 'Award', category: 'Activity' },
     { id: 'active_trader', name: 'Active Trader', description: 'Made over 1,000 transactions.', icon: 'Repeat', category: 'Activity' },
     { id: 'lightning_fast', name: 'Lightning Fast', description: 'Made 10+ transactions in a single day.', icon: 'Zap', category: 'Activity' },
-    { id: 'night_owl', name: 'Night Owl', description: 'Most transactions were made between midnight and 6am UTC.', icon: 'Moon', category 'Activity' },
+    { id: 'night_owl', name: 'Night Owl', description: 'Most transactions were made between midnight and 6am UTC.', icon: 'Moon', category: 'Activity' },
     
     // Wealth Badges
     { id: 'baby_whale', name: 'Baby Whale', description: 'Current balance is over 1 ETH.', icon: 'Gem', category: 'Wealth' },
@@ -16,8 +16,7 @@ const badgeDefinitions: Badge[] = [
 
     // Time Badges
     { id: 'og', name: 'OG', description: 'Wallet is over 3 years old.', icon: 'Cake', category: 'Time' },
-    { id
-: 'early_adopter', name: 'Early Adopter', description: 'Wallet was created before 2020.', icon: 'Clock', category: 'Time' },
+    { id: 'early_adopter', name: 'Early Adopter', description: 'Wallet was created before 2020.', icon: 'Clock', category: 'Time' },
     { id: 'veteran', name: 'Veteran', description: 'Wallet has been active for over 2 years.', icon: 'Shield', category: 'Time' },
 
     // NFT Badges
