@@ -181,7 +181,7 @@ export function WalletExplorer() {
                     Turn any Ethereum wallet into a readable story. Discover its personality, history, and on-chain journey, powered by AI.
                 </p>
                 <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-                    <div className="relative w-full max-w-md">
+                    <div className="relative w-full max-w-lg">
                         <Input
                             type="text"
                             placeholder="0x... or vitalik.eth"
