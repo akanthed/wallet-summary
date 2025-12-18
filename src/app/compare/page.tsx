@@ -118,7 +118,6 @@ export default function ComparePage() {
         const address2FromUrl = urlParams.get('address2');
 
         const newAddresses = { wallet1: "", wallet2: "" };
-        let shouldAnalyze = false;
 
         if (address1FromUrl && isValidAddress(address1FromUrl)) {
             newAddresses.wallet1 = address1FromUrl;
