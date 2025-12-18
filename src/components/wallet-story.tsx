@@ -1,10 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
-import { PersonalityBadge } from "./personality-badge";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, CheckCircle2, User, Sparkles, Pencil } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil } from "lucide-react";
 import { Separator } from "./ui/separator";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
+import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import {
     DropdownMenu,
@@ -20,11 +19,7 @@ type WalletStoryProps = {
   address: string;
 };
 
-function formatAddress(address: string) {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
-
-export function WalletStory({ result, onReset, address }: WalletStoryProps) {
+export function WalletStory({ result, onReset }: WalletStoryProps) {
     const { toast } = useToast();
     const { personalityData } = result;
 
@@ -35,6 +30,16 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         });
       };
     
+    if (!personalityData) {
+        return (
+            <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 text-center">
+                <h2 className="text-2xl font-bold">Analysis Incomplete</h2>
+                <p className="mt-2 text-muted-foreground">Could not generate a personality for this wallet.</p>
+                <Button onClick={onReset} size="lg" className="mt-6">Analyze Another Wallet</Button>
+            </div>
+        )
+    }
+
     const fullStoryText = `${personalityData.personalityTitle}\n${personalityData.oneLineSummary}\n\nTraits:\n- ${personalityData.traits.join('\n- ')}\n\n${personalityData.personalityStory}`;
 
   return (
