@@ -23,7 +23,6 @@ import { ShareCard } from "./share-card";
 import { useState, useRef } from "react";
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
-import html2canvas from "html2canvas";
 import { Twitter } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { Timeline } from "./timeline";
@@ -56,41 +55,43 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         if (!shareCardRef.current) return;
         setIsDownloadingPdf(true);
         try {
-          const canvas = await html2canvas(shareCardRef.current, {
-            scale: 2, // Higher scale for better quality
-            useCORS: true,
-            backgroundColor: null,
-          });
-    
-          const pdf = new jsPDF({
-            orientation: "landscape",
-            unit: "px",
-            format: [canvas.width, canvas.height],
-          });
-    
-          pdf.addImage(canvas.toDataURL("image/png", 1.0), "PNG", 0, 0, canvas.width, canvas.height);
-          
-          const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-          pdf.save(`wallet-story-${truncatedAddress}.pdf`);
+            const dataUrl = await toPng(shareCardRef.current, {
+                cacheBust: true,
+                quality: 0.95,
+                pixelRatio: 2,
+            });
 
-          toast({
-            title: "Success!",
-            description: "PDF downloaded successfully.",
-          });
-          track('download_pdf_success', { address });
+            // Create a new jsPDF instance
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [1200, 630] // Standard OG image size
+            });
+
+            // Add the image to the PDF
+            pdf.addImage(dataUrl, 'PNG', 0, 0, 1200, 630);
+          
+            const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+            pdf.save(`wallet-story-${truncatedAddress}.pdf`);
+
+            toast({
+                title: "Success!",
+                description: "PDF downloaded successfully.",
+            });
+            track('download_pdf_success', { address });
 
         } catch (error) {
-          console.error("Failed to download PDF", error);
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Failed to generate PDF. Please try again.",
-          });
-          track('download_pdf_failed', { address, error: error instanceof Error ? error.message : String(error) });
+            console.error("Failed to download PDF", error);
+            toast({
+                variant: "destructive",
+                title: "Error",
+                description: "Failed to generate PDF. Please try again.",
+            });
+            track('download_pdf_failed', { address, error: error instanceof Error ? error.message : String(error) });
         } finally {
-          setIsDownloadingPdf(false);
+            setIsDownloadingPdf(false);
         }
-      };
+    };
     
     const handleDownloadPng = async () => {
       track('click_download_png', { address });
