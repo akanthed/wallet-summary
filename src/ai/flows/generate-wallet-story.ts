@@ -45,8 +45,8 @@ WALLET DATA:
 - Last transaction: {{lastTxDate}}
 - Total transactions: {{txCount}}
 - Current ETH balance: {{balance}} ETH
-- Token activity: {{tokenSummary or "No token transfers detected"}}
-- NFT activity: {{nftSummary or "No NFT activity detected"}}
+- Token activity: {{#if tokenSummary}}{{tokenSummary}}{{else}}No token transfers detected{{/if}}
+- NFT activity: {{#if nftSummary}}{{nftSummary}}{{else}}No NFT activity detected{{/if}}
 
 TASK:
 1. Choose ONE personality that best fits this wallet from: Whale, Diamond Hands, NFT Collector, Active Trader, Newbie Explorer, Dormant Wallet, DeFi Farmer

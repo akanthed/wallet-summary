@@ -1,15 +1,18 @@
 import { EtherscanError, EtherscanResponse, EtherscanTx, EtherscanTokenTx, EtherscanNftTx } from "@/lib/types";
 
-const ETHERSCAN_API_URL = "https://api.etherscan.io/api";
+// Updated to V2 endpoint
+const ETHERSCAN_API_URL = "https://api.etherscan.io/v2/api";
 const API_KEY = process.env.ETHERSCAN_API_KEY;
+const CHAIN_ID = "1"; // Ethereum mainnet
 
 async function fetchEtherscan<T>(params: Record<string, string>): Promise<T> {
   if (!API_KEY) {
-    throw new Error("Etherscan API key is not configured. Please add it to your .env.local file.");
+    throw new Error("Etherscan API key is not configured.");
   }
   
   const url = new URL(ETHERSCAN_API_URL);
-  url.search = new URLSearchParams({ ...params, apikey: API_KEY }).toString();
+  // Add chainid parameter for V2 API
+  url.search = new URLSearchParams({ ...params, apikey: API_KEY, chainid: CHAIN_ID }).toString();
 
   const response = await fetch(url.toString());
   if (!response.ok) {
@@ -30,6 +33,9 @@ async function fetchEtherscan<T>(params: Record<string, string>): Promise<T> {
     }
     if (errorData.message === 'NOTOK' && errorData.result.includes('Invalid API Key')) {
         throw new Error("Invalid Etherscan API Key. Please check your .env.local file.");
+    }
+    if (errorData.message === 'NOTOK' && errorData.result.includes('chainid')) {
+        throw new Error("Missing chainid parameter for Etherscan API V2.");
     }
     throw new Error(`Etherscan API error: ${errorData.message} - ${errorData.result}`);
   }
@@ -56,7 +62,7 @@ export async function getTransactions(address: string): Promise<EtherscanTx[]> {
         startblock: '0',
         endblock: '99999999',
         page: '1',
-        offset: '10000', // Max per Etherscan API docs
+        offset: '10000',
         sort: 'asc',
     });
     return Array.isArray(result) ? result : [];
