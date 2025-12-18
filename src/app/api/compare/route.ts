@@ -93,9 +93,9 @@ function summarizeTransactionsForAI(transactions: EtherscanTx[], tokens: Ethersc
 }
 
 async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
-    const cachedResult = getCachedResult(address);
-    if (cachedResult) {
-        return cachedResult;
+    const cachedData = getCachedResult(address);
+    if (cachedData !== undefined) { // Check for undefined, as null is a valid cached value (for failed lookups)
+        return cachedData;
     }
 
     try {
@@ -105,6 +105,7 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
         ]);
 
         if (!transactions || transactions.length === 0) {
+            setCachedResult(address, null, 5 * 60 * 1000); // Cache failure for 5 minutes
             return null;
         }
 
@@ -181,6 +182,7 @@ async function analyzeWallet(address: string): Promise<AnalysisResult | null> {
 
     } catch (error) {
         console.error(`Failed to analyze wallet ${address}:`, error);
+        setCachedResult(address, null, 5 * 60 * 1000); // Cache failure for 5 minutes
         return null;
     }
 }
