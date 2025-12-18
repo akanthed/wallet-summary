@@ -28,7 +28,7 @@ export function WalletExplorer() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [rateLimit, setRateLimit] = useState(() => getRateLimit());
+  const [rateLimit, setRateLimit] = useState({ allowed: true, remaining: 5, resetTime: '' });
   const [isCached, setIsCached] = useState(false);
 
   const { toast } = useToast();
@@ -36,6 +36,9 @@ export function WalletExplorer() {
   const isAddressValid = useMemo(() => address ? isValidAddress(address) : true, [address]);
 
   useEffect(() => {
+    // This now runs only on the client, avoiding the hydration mismatch.
+    setRateLimit(getRateLimit());
+
     // Check for address in URL on initial load
     const urlParams = new URLSearchParams(window.location.search);
     const addressFromUrl = urlParams.get('address');
@@ -45,8 +48,6 @@ export function WalletExplorer() {
         handleAnalyze(addressFromUrl);
       });
     }
-
-    setRateLimit(getRateLimit());
   }, []);
 
   const handleAnalyze = async (walletAddress = address, forceRefresh = false) => {
@@ -64,14 +65,14 @@ export function WalletExplorer() {
     window.history.pushState({}, '', `?address=${walletAddress}`);
 
     // Rate limit check
-    const currentRateLimit = checkRateLimit();
-    if (!currentRateLimit && !forceRefresh) {
+    const currentRateLimitInfo = getRateLimit();
+    if (!currentRateLimitInfo.allowed && !forceRefresh) {
         toast({
             title: "Daily Limit Reached",
-            description: `You have reached your daily analysis limit. Please try again after ${getRateLimit().resetTime}.`,
+            description: `You have reached your daily analysis limit. Please try again after ${currentRateLimitInfo.resetTime}.`,
             variant: "destructive",
         });
-        setRateLimit(getRateLimit());
+        setRateLimit(currentRateLimitInfo);
         return;
     }
 
