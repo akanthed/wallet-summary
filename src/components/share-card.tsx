@@ -18,18 +18,22 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
     const generationDate = new Date().toLocaleDateString();
     const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 
+    // Get a shortened version of the story
+    const storyExcerpt = personalityData.personalityStory.split('. ').slice(0, 2).join('. ') + '.';
+
+
     return (
-      // This div is what will be captured for the PDF.
+      // This div is what will be captured for the image/PDF.
       // It's positioned off-screen and not visible to the user.
       <div
         ref={ref}
-        className="fixed -left-[9999px] top-0 w-[800px] bg-background text-foreground p-10 font-body"
-        style={{ colorScheme: "dark" }}
+        className="fixed -left-[9999px] top-0 bg-background text-foreground p-10 font-body"
+        style={{ colorScheme: "dark", width: 1200, height: 630 }}
       >
-        <div className="border rounded-lg p-8 space-y-8 h-full bg-card">
+        <div className="border rounded-lg p-8 space-y-6 h-full bg-card flex flex-col justify-between">
           <header className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Icons.logo className="h-8 w-8 text-primary" />
+            <div className="flex items-center gap-4">
+              <Icons.logo className="h-10 w-10 text-primary" />
               <h1 className="text-2xl font-headline font-bold">
                 Wallet Story Explorer
               </h1>
@@ -40,82 +44,63 @@ export const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(
             </div>
           </header>
 
-          <Separator />
-
-          <main className="space-y-8">
+          <main className="flex-grow flex flex-col justify-center space-y-8">
             <div className="text-center space-y-3">
-              <h2 className="text-3xl font-headline font-bold text-primary">
+              <h2 className="text-4xl font-headline font-bold text-primary bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                 {personalityData.personalityTitle}
               </h2>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-xl text-muted-foreground">
                 {personalityData.oneLineSummary}
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <User className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-headline font-semibold">
-                  Personality Traits
-                </h3>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {personalityData.traits.map((trait, index) => (
-                  <Badge
-                    key={index}
-                    variant="secondary"
-                    className="text-base px-4 py-2"
-                  >
-                    {trait}
-                  </Badge>
-                ))}
-              </div>
+            <div className="flex justify-center flex-wrap gap-4">
+              {personalityData.traits.map((trait, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="text-lg px-6 py-3"
+                >
+                  {trait}
+                </Badge>
+              ))}
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Pencil className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-headline font-semibold">
-                  Personality Story
-                </h3>
-              </div>
-              <div className="text-foreground/90" style={{ lineHeight: 1.7 }}>
-                <p>{personalityData.personalityStory}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-4">
-              <StatsCard
-                title="Wallet Age"
-                value={`${stats.walletAge} days`}
-                icon={CalendarDays}
-              />
-              <StatsCard
-                title="Total Transactions"
-                value={stats.txCount}
-                icon={Repeat}
-              />
-              <StatsCard
-                title="ETH Balance"
-                value={`${stats.balance} ETH`}
-                icon={Wallet}
-              />
-              <StatsCard
-                title="Activity"
-                value={stats.activityStatus}
-                icon={Activity}
-              />
+            <div className="text-center text-foreground/90 max-w-2xl mx-auto" style={{ lineHeight: 1.6 }}>
+              <p>{storyExcerpt}</p>
             </div>
           </main>
+          
+          <div className="grid grid-cols-4 gap-4">
+            <StatsCard
+              title="Wallet Age"
+              value={`${stats.walletAge} days`}
+              icon={CalendarDays}
+            />
+            <StatsCard
+              title="Transactions"
+              value={stats.txCount}
+              icon={Repeat}
+            />
+            <StatsCard
+              title="ETH Balance"
+              value={`${stats.balance} ETH`}
+              icon={Wallet}
+            />
+            <StatsCard
+              title="Activity"
+              value={stats.activityStatus}
+              icon={Activity}
+            />
+          </div>
 
-          <Separator />
 
-          <footer className="text-center text-sm text-muted-foreground">
+          <footer className="text-center text-sm text-muted-foreground pt-4">
             <p>
-              Generated on {generationDate} from{" "}
-              <a href="https://wallet-story-explorer.web.app" className="text-primary hover:underline">
+              Generated by{" "}
+              <span className="text-primary">
                 wallet-story-explorer.web.app
-              </a>
+              </span>
             </p>
           </footer>
         </div>
