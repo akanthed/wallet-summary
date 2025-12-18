@@ -20,6 +20,7 @@ import {
   } from "@/components/ui/collapsible"
 import { Badge } from "./ui/badge";
 import { ShareCard } from "./share-card";
+import { PdfCard } from "./pdf-card";
 import { useState, useRef } from "react";
 import jsPDF from "jspdf";
 import { toPng } from "html-to-image";
@@ -41,6 +42,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const [isDownloadingPng, setIsDownloadingPng] = useState(false);
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
     const shareCardRef = useRef<HTMLDivElement>(null);
+    const pdfCardRef = useRef<HTMLDivElement>(null);
 
     const generateFilename = (extension: 'pdf' | 'png'): string => {
         const date = new Date();
@@ -58,25 +60,27 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     
     const handleDownloadPdf = async () => {
         track('click_download_pdf', { address });
-        if (!shareCardRef.current) return;
+        if (!pdfCardRef.current) return;
         setIsDownloadingPdf(true);
         try {
-            const dataUrl = await toPng(shareCardRef.current, {
+            const dataUrl = await toPng(pdfCardRef.current, {
                 cacheBust: true,
                 quality: 0.95,
                 pixelRatio: 2,
             });
 
+            // Dynamically get the width and height from the rendered component
+            const width = pdfCardRef.current.offsetWidth;
+            const height = pdfCardRef.current.offsetHeight;
+
             // Create a new jsPDF instance
             const pdf = new jsPDF({
-                orientation: 'landscape',
+                orientation: width > height ? 'landscape' : 'portrait',
                 unit: 'px',
-                format: [1200, 630] // Standard OG image size
+                format: [width, height]
             });
 
-            // Add the image to the PDF
-            pdf.addImage(dataUrl, 'PNG', 0, 0, 1200, 630);
-          
+            pdf.addImage(dataUrl, 'PNG', 0, 0, width, height);
             pdf.save(generateFilename('pdf'));
 
             toast({
@@ -172,6 +176,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
   return (
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <ShareCard ref={shareCardRef} result={result} address={address} />
+        <PdfCard ref={pdfCardRef} result={result} address={address} />
         <TooltipProvider>
             <div className="space-y-10">
                 <header className="text-center space-y-4">
@@ -340,7 +345,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 ) : (
                                     <>
                                         <Download className="mr-2 h-4 w-4" />
-                                        <span>PDF</span>
+                                        <span>Full Report (PDF)</span>
                                     </>
                                 )}
                             </DropdownMenuItem>
