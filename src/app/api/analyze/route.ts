@@ -48,8 +48,14 @@ function summarizeTransactionsForAI(transactions: EtherscanTx[], tokens: Ethersc
         const lastTxDate = new Date(parseInt(transactions[txCount-1].timeStamp) * 1000).toLocaleDateString();
         summary += `Total Transactions: ${txCount} (from ${firstTxDate} to ${lastTxDate})\n`;
 
+        const sortedByValue = [...transactions].sort((a,b) => parseFloat(b.value) - parseFloat(a.value));
+        const largestTx = sortedByValue[0];
+        if (largestTx) {
+            summary += `Largest transaction: a transfer of ${(parseInt(largestTx.value) / 1e18).toFixed(4)} ETH on ${new Date(parseInt(largestTx.timeStamp) * 1000).toLocaleDateString()}.\n`
+        }
+
         const sampleTxs = transactions.slice(0, 5); // get first 5
-        summary += 'Sample Transactions:\n';
+        summary += 'Sample Transactions (first 5):\n';
         sampleTxs.forEach(tx => {
             const date = new Date(parseInt(tx.timeStamp) * 1000).toLocaleDateString();
             const value = (parseInt(tx.value) / 1e18).toFixed(4);
@@ -58,15 +64,21 @@ function summarizeTransactionsForAI(transactions: EtherscanTx[], tokens: Ethersc
     }
 
     if (tokens.length > 0) {
-        summary += `\nFound ${tokens.length} token transfers. First 5:\n`;
-        tokens.slice(0, 5).forEach(tx => {
+        summary += `\nFound ${tokens.length} token transfers. First token transfer on ${new Date(parseInt(tokens[0].timeStamp) * 1000).toLocaleDateString()}.\n`;
+        const uniqueTokens = new Set(tokens.map(t => t.tokenSymbol));
+        summary += `Unique tokens: ${Array.from(uniqueTokens).slice(0,5).join(', ')}\n`
+
+        tokens.slice(0, 3).forEach(tx => {
             summary += `- Token: ${tx.tokenSymbol}, To: ${tx.to.slice(0,10)}...\n`;
         });
     }
 
     if (nfts.length > 0) {
-        summary += `\nFound ${nfts.length} NFT transfers. First 5:\n`;
-        nfts.slice(0, 5).forEach(tx => {
+        summary += `\nFound ${nfts.length} NFT transfers. First NFT transfer on ${new Date(parseInt(nfts[0].timeStamp) * 1000).toLocaleDateString()}.\n`;
+        const uniqueCollections = new Set(nfts.map(t => t.tokenName));
+        summary += `Unique collections: ${Array.from(uniqueCollections).slice(0,3).join(', ')}\n`
+
+        nfts.slice(0, 3).forEach(tx => {
             summary += `- NFT: ${tx.tokenName} #${tx.tokenID.slice(0,5)}..., To: ${tx.to.slice(0,10)}...\n`;
         });
     }

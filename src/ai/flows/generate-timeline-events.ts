@@ -42,22 +42,22 @@ const timelinePrompt = ai.definePrompt({
   system: `You are a blockchain historian. Your task is to identify 5-7 key milestone events from a wallet's transaction history and present them as a timeline.
 
 RULES:
-- Identify the most significant events. Don't just list transactions.
-- Focus on "firsts," "biggests," "most active periods," and "long pauses."
+- Identify the most significant events. Don't just list every transaction.
+- Focus on "firsts" (first NFT purchase), "biggests" (largest transaction), "most active periods," and notable "long pauses."
 - The event date must be the date of the transaction that triggered it.
 - Titles should be short and descriptive (e.g., "The Beginning," "First NFT," "Shopping Spree").
 - Descriptions should be one concise sentence.
 - Always include the wallet's creation as the first event.
 - Infer milestones like "100th Transaction" or "1 Year Anniversary".
-- If there are long gaps, create an "Activity" event like "Hibernation" or "Quiet Period".
-- If there's a burst of activity, create an event like "Peak Activity".
+- If there are long gaps in activity, create an "Activity" event like "Hibernation" or "Quiet Period".
+- If there's a burst of activity, create an "Activity" event like "Peak Activity".
 
 Event Types:
 - Creation: The very first transaction.
-- Transaction: A significant ETH transfer.
+- Transaction: A significant ETH transfer (e.g., largest value, first major transfer).
 - NFT: First NFT purchase or a notable NFT event.
-- Token: First ERC20 token interaction.
-- Activity: Periods of high or low activity.
+- Token: First ERC20 token interaction or notable acquisition.
+- Activity: Periods of high or low activity (e.g., "Longest Dormant Period," "Highest Active Streak").
 - Milestone: Anniversaries, transaction count milestones, etc.
 `,
   prompt: `Analyze the following transaction summary and generate a timeline of 5-7 key events.
@@ -79,6 +79,9 @@ const generateTimelineEventsFlow = ai.defineFlow(
     const {output} = await timelinePrompt(input);
     
     // Sort events by date just in case the AI doesn't
-    return output!.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    if (!output) {
+        return [];
+    }
+    return output.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }
 );
