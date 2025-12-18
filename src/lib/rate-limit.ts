@@ -1,3 +1,4 @@
+
 const MAX_DAILY_ANALYSES = 5;
 const RATE_LIMIT_KEY = 'walletStoryRateLimit';
 
@@ -10,7 +11,7 @@ function getTodayString(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-export function checkRateLimit(): { allowed: boolean; remaining: number; resetTime: string } {
+export function getRateLimit(): { allowed: boolean; remaining: number; resetTime: string } {
     if (typeof window === 'undefined') {
         return { allowed: true, remaining: MAX_DAILY_ANALYSES, resetTime: '' };
     }
@@ -43,6 +44,10 @@ export function checkRateLimit(): { allowed: boolean; remaining: number; resetTi
     const resetTime = tomorrow.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
     return { allowed, remaining: Math.max(0, remaining), resetTime };
+}
+
+export function checkRateLimit(): boolean {
+    return getRateLimit().allowed;
 }
 
 export function incrementRateLimit() {

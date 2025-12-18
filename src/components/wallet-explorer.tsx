@@ -10,7 +10,7 @@ import { AnalysisResult } from "@/lib/types";
 import { WalletStory } from "./wallet-story";
 import { ArrowRight, Sparkles, RefreshCw, Info, CheckCircle2, XCircle } from "lucide-react";
 import { getCachedResult, setCachedResult } from "@/lib/cache";
-import { checkRateLimit, incrementRateLimit } from "@/lib/rate-limit";
+import { checkRateLimit, incrementRateLimit, getRateLimit } from "@/lib/rate-limit";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 
@@ -27,7 +27,7 @@ export function WalletExplorer() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [rateLimit, setRateLimit] = useState({ allowed: true, remaining: 5, resetTime: '' });
+  const [rateLimit, setRateLimit] = useState(() => getRateLimit());
   const [isCached, setIsCached] = useState(false);
 
   const { toast } = useToast();
@@ -45,7 +45,7 @@ export function WalletExplorer() {
       });
     }
 
-    setRateLimit(checkRateLimit());
+    setRateLimit(getRateLimit());
   }, []);
 
   const handleAnalyze = async (walletAddress = address, forceRefresh = false) => {
@@ -63,13 +63,13 @@ export function WalletExplorer() {
 
     // Rate limit check
     const currentRateLimit = checkRateLimit();
-    if (!currentRateLimit.allowed && !forceRefresh) {
+    if (!currentRateLimit && !forceRefresh) {
         toast({
             title: "Daily Limit Reached",
-            description: `You have reached your daily analysis limit. Please try again after ${currentRateLimit.resetTime}.`,
+            description: `You have reached your daily analysis limit. Please try again after ${getRateLimit().resetTime}.`,
             variant: "destructive",
         });
-        setRateLimit(currentRateLimit);
+        setRateLimit(getRateLimit());
         return;
     }
 
@@ -103,7 +103,7 @@ export function WalletExplorer() {
       setResult(data);
       setCachedResult(walletAddress, data);
       incrementRateLimit();
-      setRateLimit(checkRateLimit());
+      setRateLimit(getRateLimit());
 
     } catch (error) {
       const message =
@@ -219,5 +219,3 @@ export function WalletExplorer() {
     </div>
   );
 }
-
-    

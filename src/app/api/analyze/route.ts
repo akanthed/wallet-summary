@@ -1,3 +1,4 @@
+
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import * as etherscan from "@/lib/etherscan";
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
         etherscan.getTransactions(address),
     ]);
 
-    if (transactions.length === 0) {
+    if (!transactions || transactions.length === 0) {
         return NextResponse.json(
             { error: "This wallet has no transaction history." },
             { status: 404 }
@@ -133,5 +134,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status });
   }
 }
-
-    
