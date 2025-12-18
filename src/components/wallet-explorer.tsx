@@ -37,7 +37,8 @@ export function WalletExplorer() {
 
   useEffect(() => {
     // This now runs only on the client, avoiding the hydration mismatch.
-    setRateLimit(getRateLimit());
+    const initialRateLimit = getRateLimit();
+    setRateLimit(initialRateLimit);
 
     // Check for address in URL on initial load
     const urlParams = new URLSearchParams(window.location.search);
@@ -194,7 +195,7 @@ export function WalletExplorer() {
                             disabled={!rateLimit.allowed || isPending}
                         />
                         {address && (
-                          <div className="absolute right-[150px] top-1/2 -translate-y-1/2">
+                          <div className="absolute right-[140px] top-1/2 -translate-y-1/2">
                             {isAddressValid ? (
                               <CheckCircle2 className="h-5 w-5 text-green-500" />
                             ) : (
