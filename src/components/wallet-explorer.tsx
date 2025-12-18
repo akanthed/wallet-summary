@@ -12,6 +12,7 @@ import { ArrowRight, Sparkles, RefreshCw, Info, CheckCircle2, XCircle } from "lu
 import { getCachedResult, setCachedResult } from "@/lib/cache";
 import { checkRateLimit, incrementRateLimit, getRateLimit } from "@/lib/rate-limit";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { track } from "@/lib/analytics";
 
 
 const EXAMPLE_WALLET = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
@@ -58,6 +59,7 @@ export function WalletExplorer() {
       return;
     }
     
+    track('analyze_wallet', { address: walletAddress, forceRefresh });
     // Update URL without reloading page
     window.history.pushState({}, '', `?address=${walletAddress}`);
 
@@ -104,6 +106,7 @@ export function WalletExplorer() {
       setCachedResult(walletAddress, data);
       incrementRateLimit();
       setRateLimit(getRateLimit());
+      track('analysis_success', { address: walletAddress, personality: data.personalityData.personalityTitle });
 
     } catch (error) {
       const message =
@@ -114,12 +117,14 @@ export function WalletExplorer() {
         variant: "destructive",
       });
       setResult(null);
+      track('analysis_failed', { address: walletAddress, error: message });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleExampleWallet = () => {
+    track('click_example_wallet');
     setAddress(EXAMPLE_WALLET);
     startTransition(() => {
       handleAnalyze(EXAMPLE_WALLET);
@@ -131,6 +136,11 @@ export function WalletExplorer() {
     setAddress("");
     setIsCached(false);
     window.history.pushState({}, '', '/');
+  }
+
+  const handleForceRefresh = () => {
+    track('force_refresh', { address });
+    handleAnalyze(address, true);
   }
 
   if (isLoading) {
@@ -146,7 +156,7 @@ export function WalletExplorer() {
                     <AlertTitle className="text-accent">Displaying Cached Result</AlertTitle>
                     <AlertDescription className="flex justify-between items-center">
                         <span>This story was generated recently.</span>
-                        <Button variant="outline" size="sm" onClick={() => handleAnalyze(address, true)}>
+                        <Button variant="outline" size="sm" onClick={handleForceRefresh}>
                             <RefreshCw className="mr-2 h-3 w-3" />
                             Force Refresh
                         </Button>

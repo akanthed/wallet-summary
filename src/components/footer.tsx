@@ -1,9 +1,17 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Github } from "lucide-react";
 import Link from "next/link";
 import { Icons } from "./icons";
+import { track } from "@/lib/analytics";
 
 export function Footer() {
+
+  const handleStarClick = () => {
+    track('click_github_star');
+  }
+
   return (
     <footer className="w-full border-t">
       <div className="container flex flex-col items-center justify-between gap-4 py-5 sm:flex-row">
@@ -33,7 +41,7 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild>
-                <Link href="https://github.com/akanthed/wallet-summary" target="_blank" rel="noopener noreferrer">
+                <Link href="https://github.com/akanthed/wallet-summary" target="_blank" rel="noopener noreferrer" onClick={handleStarClick}>
                     <Github className="h-4 w-4 mr-2" />
                     ⭐ Star on GitHub
                 </Link>

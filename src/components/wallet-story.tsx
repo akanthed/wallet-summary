@@ -18,6 +18,7 @@ import { useState, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { Twitter } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 type WalletStoryProps = {
   result: AnalysisResult;
@@ -40,6 +41,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
       };
     
     const handleDownloadPdf = async () => {
+        track('click_download_pdf', { address });
         if (!shareCardRef.current) return;
         setIsDownloadingPdf(true);
         try {
@@ -64,6 +66,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             title: "Success!",
             description: "PDF downloaded successfully.",
           });
+          track('download_pdf_success', { address });
 
         } catch (error) {
           console.error("Failed to download PDF", error);
@@ -72,6 +75,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             title: "Error",
             description: "Failed to generate PDF. Please try again.",
           });
+          track('download_pdf_failed', { address, error: error instanceof Error ? error.message : String(error) });
         } finally {
           setIsDownloadingPdf(false);
         }
@@ -93,6 +97,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const shareCardCopy = `I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭\n\nCheck out yours at ${window.location.origin}`;
     
     const shareOnTwitter = () => {
+        track('click_share_twitter', { address });
         const text = encodeURIComponent(`I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭\n\nCheck out yours at`);
         const url = encodeURIComponent(`${window.location.origin}?address=${address}`);
         const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
@@ -100,8 +105,14 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     }
 
     const copyLink = () => {
+        track('click_copy_link', { address });
         const url = `${window.location.origin}?address=${address}`;
         handleCopyToClipboard(url, "Link copied to clipboard!");
+    }
+    
+    const copyShareText = () => {
+        track('click_copy_share_text', { address });
+        handleCopyToClipboard(shareCardCopy, "Share text copied!");
     }
 
 
@@ -198,7 +209,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 <LinkIcon className="mr-2 h-4 w-4" />
                                 <span>Copy Link</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCopyToClipboard(shareCardCopy, "Share text copied!")}>
+                            <DropdownMenuItem onClick={copyShareText}>
                                 <Copy className="mr-2 h-4 w-4" />
                                 <span>Copy Share Text</span>
                             </DropdownMenuItem>
