@@ -5,9 +5,13 @@ import { generateWalletPersonality } from "@/ai/flows/generate-wallet-personalit
 import { WalletStats } from "@/lib/types";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const ENS_REGEX = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
 
 const RequestBodySchema = z.object({
-  address: z.string().regex(WALLET_ADDRESS_REGEX, "Invalid Ethereum address"),
+  address: z.string().refine(
+    (val) => WALLET_ADDRESS_REGEX.test(val) || ENS_REGEX.test(val),
+    "Invalid Ethereum address or ENS name"
+  ),
 });
 
 function createSummary(items: any[], type: 'token' | 'nft'): string {
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
 
     if (!validation.success) {
       return NextResponse.json(
-        { error: "Invalid address format. Please provide a valid Ethereum address." },
+        { error: "Invalid address format. Please provide a valid Ethereum address or ENS name." },
         { status: 400 }
       );
     }
@@ -129,3 +133,5 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status });
   }
 }
+
+    

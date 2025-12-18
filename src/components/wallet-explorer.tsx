@@ -1,13 +1,14 @@
+
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingState } from "./loading-state";
 import { AnalysisResult } from "@/lib/types";
 import { WalletStory } from "./wallet-story";
-import { ArrowRight, Sparkles, RefreshCw, Info } from "lucide-react";
+import { ArrowRight, Sparkles, RefreshCw, Info, CheckCircle2, XCircle } from "lucide-react";
 import { getCachedResult, setCachedResult } from "@/lib/cache";
 import { checkRateLimit, incrementRateLimit } from "@/lib/rate-limit";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,6 +16,11 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const EXAMPLE_WALLET = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045";
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
+const ENS_REGEX = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
+
+function isValidAddress(address: string): boolean {
+    return WALLET_ADDRESS_REGEX.test(address) || ENS_REGEX.test(address);
+}
 
 export function WalletExplorer() {
   const [address, setAddress] = useState("");
@@ -26,11 +32,13 @@ export function WalletExplorer() {
 
   const { toast } = useToast();
 
+  const isAddressValid = useMemo(() => address ? isValidAddress(address) : true, [address]);
+
   useEffect(() => {
     // Check for address in URL on initial load
     const urlParams = new URLSearchParams(window.location.search);
     const addressFromUrl = urlParams.get('address');
-    if (addressFromUrl && WALLET_ADDRESS_REGEX.test(addressFromUrl)) {
+    if (addressFromUrl && isValidAddress(addressFromUrl)) {
       setAddress(addressFromUrl);
       startTransition(() => {
         handleAnalyze(addressFromUrl);
@@ -41,10 +49,10 @@ export function WalletExplorer() {
   }, []);
 
   const handleAnalyze = async (walletAddress = address, forceRefresh = false) => {
-    if (!WALLET_ADDRESS_REGEX.test(walletAddress)) {
+    if (!isValidAddress(walletAddress)) {
       toast({
         title: "Invalid Address",
-        description: "Please enter a valid Ethereum address (e.g., 0x...)",
+        description: "Please enter a valid Ethereum address or ENS name.",
         variant: "destructive",
       });
       return;
@@ -165,17 +173,28 @@ export function WalletExplorer() {
                     <div className="relative w-full max-w-md">
                         <Input
                             type="text"
-                            placeholder="Paste an Ethereum address or ENS name..."
-                            className="h-12 w-full pr-28 text-center sm:text-left"
+                            placeholder="0x... or vitalik.eth"
+                            className={`h-12 w-full pr-40 text-center sm:text-left ${
+                                address && !isAddressValid ? 'border-destructive' : ''
+                              }`}
                             value={address}
                             onChange={(e) => setAddress(e.target.value)}
                             onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
                             disabled={!rateLimit.allowed || isPending}
                         />
+                        {address && (
+                          <div className="absolute right-[150px] top-1/2 -translate-y-1/2">
+                            {isAddressValid ? (
+                              <CheckCircle2 className="h-5 w-5 text-green-500" />
+                            ) : (
+                              <XCircle className="h-5 w-5 text-destructive" />
+                            )}
+                          </div>
+                        )}
                         <Button 
                             className="absolute right-1.5 top-1.5 h-9"
                             onClick={() => handleAnalyze()}
-                            disabled={!rateLimit.allowed || isPending || !address}
+                            disabled={!rateLimit.allowed || isPending || !address || !isAddressValid}
                         >
                             Explore <ArrowRight className="ml-2 h-4 w-4" />
                         </Button>
@@ -200,3 +219,5 @@ export function WalletExplorer() {
     </div>
   );
 }
+
+    
