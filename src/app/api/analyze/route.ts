@@ -99,6 +99,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       personality: storyResult.personality,
       story: storyResult.story,
+      highlights: storyResult.highlights,
       stats: stats,
       limitedData: limitedData
     });

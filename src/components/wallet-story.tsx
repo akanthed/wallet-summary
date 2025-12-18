@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
 import { PersonalityBadge } from "./personality-badge";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, CheckCircle2 } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -65,6 +65,20 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                     </p>
                 ))}
                 </div>
+
+                {result.highlights && result.highlights.length > 0 && (
+                  <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '300ms'}}>
+                    <h3 className="text-2xl font-headline font-semibold text-center">Key Highlights</h3>
+                    <ul className="space-y-3">
+                      {result.highlights.map((highlight, index) => (
+                        <li key={index} className="flex items-start gap-3">
+                          <CheckCircle2 className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
+                          <span className="text-foreground/90">{highlight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
 
                 {result.limitedData && (
                 <p className="text-center text-sm text-muted-foreground">

@@ -49,6 +49,7 @@ export interface EtherscanResponse<T> {
   export interface AnalysisResult {
     personality: string;
     story: string;
+    highlights: string[];
     stats: WalletStats;
     limitedData: boolean;
   }
