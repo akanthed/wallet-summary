@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Twitter } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -17,6 +17,7 @@ import { ShareCard } from "./share-card";
 import { useState, useRef } from "react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { Twitter } from "lucide-react";
 
 type WalletStoryProps = {
   result: AnalysisResult;
@@ -110,10 +111,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         <TooltipProvider>
             <div className="space-y-10">
                 <header className="text-center space-y-4">
-                    <h1 className="text-4xl font-headline font-bold text-foreground tracking-wide animate-in fade-in slide-in-from-bottom-3 duration-700">
+                    <h1 className="text-3xl sm:text-4xl font-headline font-bold text-foreground tracking-wide animate-in fade-in slide-in-from-bottom-3 duration-700">
                         {personalityData.personalityTitle}
                     </h1>
-                    <p className="text-xl text-muted-foreground font-light animate-in fade-in slide-in-from-bottom-3 duration-700" style={{animationDelay: '150ms'}}>
+                    <p className="text-lg sm:text-xl text-muted-foreground font-light animate-in fade-in slide-in-from-bottom-3 duration-700" style={{animationDelay: '150ms'}}>
                         {personalityData.oneLineSummary}
                     </p>
                 </header>
@@ -150,7 +151,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 
                 <Separator />
 
-                <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                <div className="grid grid-cols-2 gap-4">
                     <StatsCard
                         title="Wallet Age"
                         value={`${result.stats.walletAge} days`}
