@@ -7,7 +7,7 @@ export function Footer() {
   return (
     <footer className="w-full border-t">
       <div className="container flex flex-col items-center justify-between gap-4 py-5 sm:flex-row">
-        <div className="flex flex-col items-center gap-4 px-8 sm:flex-row sm:gap-2 sm:px-0">
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:gap-2">
           <Icons.logo className="h-7 w-7 text-primary" />
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             Built with{" "}
@@ -17,9 +17,9 @@ export function Footer() {
               rel="noopener noreferrer"
               className="font-medium underline underline-offset-4"
             >
-              Google AI
+              Google Gemini AI
             </a>{" "}
-            &{" "}
+            &amp;{" "}
             <a
               href="https://etherscan.io"
               target="_blank"
@@ -35,7 +35,7 @@ export function Footer() {
             <Button variant="outline" size="sm" asChild>
                 <Link href="https://github.com/akanthed/wallet-summary" target="_blank" rel="noopener noreferrer">
                     <Github className="h-4 w-4 mr-2" />
-                    Star on GitHub
+                    ⭐ Star on GitHub
                 </Link>
             </Button>
         </div>
