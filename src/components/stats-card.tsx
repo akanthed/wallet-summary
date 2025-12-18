@@ -12,11 +12,12 @@ type StatsCardProps = {
   value: string | number;
   icon: LucideIcon;
   className?: string;
+  style?: React.CSSProperties;
 };
 
-export function StatsCard({ title, value, icon: Icon, className }: StatsCardProps) {
+export function StatsCard({ title, value, icon: Icon, className, style }: StatsCardProps) {
   return (
-    <Card className={cn("transform transition-all hover:scale-[1.02] hover:shadow-md", className)}>
+    <Card className={cn("transform transition-all hover:scale-[1.02] hover:shadow-md", className)} style={style}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
