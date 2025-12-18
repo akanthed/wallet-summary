@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,11 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator
   } from "@/components/ui/dropdown-menu"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+  } from "@/components/ui/collapsible"
 import { Badge } from "./ui/badge";
 import { ShareCard } from "./share-card";
 import { useState, useRef } from "react";
@@ -33,6 +38,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { personalityData, timelineEvents } = result;
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [isDownloadingPng, setIsDownloadingPng] = useState(false);
+    const [isTimelineOpen, setIsTimelineOpen] = useState(false);
     const shareCardRef = useRef<HTMLDivElement>(null);
 
 
@@ -236,10 +242,21 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 {timelineEvents && timelineEvents.length > 0 && (
                   <>
                     <Separator />
-                    <div className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500" style={{animationDelay: '900ms'}}>
-                        <h3 className="text-lg font-headline font-semibold text-center">Wallet Journey</h3>
-                        <Timeline events={timelineEvents} />
-                    </div>
+                    <Collapsible
+                        open={isTimelineOpen}
+                        onOpenChange={setIsTimelineOpen}
+                        className="w-full space-y-6"
+                    >
+                        <CollapsibleTrigger asChild>
+                            <button className="w-full flex justify-center items-center gap-2 text-lg font-headline font-semibold hover:text-primary transition-colors">
+                                View Journey
+                                <ChevronDown className={`h-5 w-5 transition-transform duration-300 ${isTimelineOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-4 duration-500">
+                            <Timeline events={timelineEvents} />
+                        </CollapsibleContent>
+                    </Collapsible>
                   </>
                 )}
 
