@@ -5,7 +5,7 @@ const API_KEY = process.env.ETHERSCAN_API_KEY;
 
 async function fetchEtherscan<T>(params: Record<string, string>): Promise<T> {
   if (!API_KEY) {
-    throw new Error("Etherscan API key is not configured.");
+    throw new Error("Etherscan API key is not configured. Please add it to your .env.local file.");
   }
   
   const url = new URL(ETHERSCAN_API_URL);
