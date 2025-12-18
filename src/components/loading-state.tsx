@@ -1,6 +1,5 @@
 "use client";
 
-import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import { Icons } from "./icons";
 
@@ -24,7 +23,7 @@ export function LoadingState() {
         }
         return prevStep + 1;
       });
-    }, 1500);
+    }, 2000); // Increased interval for a better feel
 
     return () => clearInterval(interval);
   }, []);
@@ -36,12 +35,12 @@ export function LoadingState() {
             <Icons.logo className="h-16 w-16 text-primary animate-pulse mx-auto" />
             <h2 className="text-2xl font-headline font-semibold">Crafting Your Story</h2>
             <p className="text-muted-foreground">
-                Please wait while we analyze the wallet&apos;s journey on the blockchain.
+                Please wait while we analyze the wallet&apos;s journey on the blockchain. This usually takes 10-15 seconds.
             </p>
         </div>
         <div className="relative pt-10">
             <div className="w-full bg-muted rounded-full h-2.5">
-                <div className="bg-primary h-2.5 rounded-full transition-all duration-500" style={{ width: `${(currentStep + 1) * (100 / progressSteps.length)}%` }}></div>
+                <div className="bg-primary h-2.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${(currentStep + 1) * (100 / progressSteps.length)}%` }}></div>
             </div>
             <p className="text-sm text-muted-foreground mt-3 transition-all duration-300">
               {progressSteps[currentStep]}
