@@ -1,9 +1,9 @@
 
 
 import { Button } from "@/components/ui/button";
-import { AnalysisResult } from "@/lib/types";
+import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin, Download, Camera } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,10 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuSub,
+    DropdownMenuSubTrigger,
+    DropdownMenuSubContent,
+    DropdownMenuPortal
 } from "@/components/ui/dropdown-menu"
 import {
     Collapsible,
@@ -19,10 +23,14 @@ import {
     CollapsibleTrigger,
   } from "@/components/ui/collapsible"
 import { Badge } from "./ui/badge";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { track } from "@/lib/analytics";
 import { Timeline } from "./timeline";
 import { Badges } from "./badges";
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
+import { PdfCard } from "./pdf-card";
+
 
 type WalletStoryProps = {
   result: AnalysisResult;
@@ -34,6 +42,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { toast } = useToast();
     const { personalityData, timelineEvents, badges } = result;
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
+    const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+
+    const pdfCardRef = useRef<HTMLDivElement>(null);
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -41,6 +52,55 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
           title: successMessage,
         });
       };
+
+    const generateFilename = (extension: 'pdf' | 'png') => {
+        const date = new Date();
+        const dateStr = `${date.toLocaleString('default', { month: 'short' })}-${date.getDate()}-${date.getFullYear()}`;
+        const personality = personalityData.personalityTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        return `wallet-story-${personality}-${dateStr}.${extension}`;
+    }
+
+    const handleDownloadPdf = async () => {
+        if (!pdfCardRef.current) return;
+        setIsDownloadingPdf(true);
+        track('click_download_pdf', { address });
+
+        try {
+            const dataUrl = await toPng(pdfCardRef.current, { 
+                cacheBust: true, 
+                pixelRatio: 2, // High quality
+                quality: 0.95
+            });
+            
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'px',
+                format: [pdfCardRef.current.offsetWidth, pdfCardRef.current.offsetHeight]
+            });
+            
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            
+            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.save(generateFilename('pdf'));
+            
+            toast({
+                title: "Success!",
+                description: "PDF downloaded successfully.",
+            });
+
+        } catch (error) {
+            console.error('Error generating PDF', error);
+            toast({
+                title: "Error",
+                description: "Failed to generate PDF. Please try again.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsDownloadingPdf(false);
+        }
+    };
+
 
     if (!personalityData) {
         return (
@@ -85,6 +145,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
 
   return (
+    <>
+    <PdfCard ref={pdfCardRef} result={result} address={address} />
+
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <TooltipProvider>
             <div className="space-y-10">
@@ -197,10 +260,11 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                         <Search className="mr-2 h-4 w-4" />
                         Analyze Another
                     </Button>
-                    <DropdownMenu>
+
+                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="lg">
-                                <Share2 className="mr-2 h-4 w-4" /> Share
+                                <Share2 className="mr-2 h-4 w-4" /> Share & Download
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent>
@@ -220,11 +284,30 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 <Linkedin className="mr-2 h-4 w-4" />
                                 <span>Share on LinkedIn</span>
                             </DropdownMenuItem>
+                             <Separator className="my-1" />
+                            <DropdownMenuItem onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
+                                {isDownloadingPdf ? (
+                                     <div className="flex items-center">
+                                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Generating...
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Download className="mr-2 h-4 w-4" />
+                                        <span>Full Report (PDF)</span>
+                                    </>
+                                )}
+                            </DropdownMenuItem>
+
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
             </div>
       </TooltipProvider>
     </div>
+    </>
   );
 }
