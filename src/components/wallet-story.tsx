@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { AnalysisResult } from "@/lib/types";
 import { StatsCard } from "./stats-card";
@@ -296,7 +297,16 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 <Twitter className="mr-2 h-4 w-4" />
                                 <span>Share on Twitter</span>
                             </DropdownMenuItem>
-                            <DropdownMenuSeparator />
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="lg" disabled={isDownloadingPng || isDownloadingPdf}>
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
                             <DropdownMenuItem onClick={handleDownloadPng} disabled={isDownloadingPng}>
                                 {isDownloadingPng ? (
                                     <div className="flex items-center">
@@ -309,7 +319,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 ) : (
                                     <>
                                         <Camera className="mr-2 h-4 w-4" />
-                                        <span>Download Image (PNG)</span>
+                                        <span>Image (PNG)</span>
                                     </>
                                 )}
                             </DropdownMenuItem>
@@ -325,7 +335,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 ) : (
                                     <>
                                         <Download className="mr-2 h-4 w-4" />
-                                        <span>Download as PDF</span>
+                                        <span>PDF</span>
                                     </>
                                 )}
                             </DropdownMenuItem>
@@ -337,3 +347,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     </div>
   );
 }
+
+  
+
+    
