@@ -12,9 +12,9 @@ export function Footer() {
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             Built with{" "}
             <a
-              href="https://firebase.google.com/docs/genai"
+              href="https://ai.google.dev/"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="font-medium underline underline-offset-4"
             >
               Google AI
@@ -23,7 +23,7 @@ export function Footer() {
             <a
               href="https://etherscan.io"
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               className="font-medium underline underline-offset-4"
             >
               Etherscan
@@ -33,7 +33,7 @@ export function Footer() {
         </div>
         <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" asChild>
-                <Link href="https://github.com/FirebaseExtended/ai-apps" target="_blank">
+                <Link href="https://github.com/akanthed/wallet-summary" target="_blank" rel="noopener noreferrer">
                     <Github className="h-4 w-4 mr-2" />
                     Star on GitHub
                 </Link>
