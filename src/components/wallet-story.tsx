@@ -347,7 +347,3 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     </div>
   );
 }
-
-  
-
-    
