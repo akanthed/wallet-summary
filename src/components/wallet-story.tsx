@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown, Check, Loader2 } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, Download, User, Pencil, Search, Link as LinkIcon, Camera, ChevronDown, Check, Loader2, Linkedin } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -183,14 +183,21 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         )
     }
 
-    const shareCardCopy = `I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭\n\nCheck out yours at ${window.location.origin}`;
+    const shareCardCopy = `I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭✨ Analyze yours at ${window.location.origin}`;
     
     const shareOnTwitter = () => {
         track('click_share_twitter', { address });
-        const text = encodeURIComponent(`I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭\n\nCheck out yours at`);
+        const text = encodeURIComponent(`I just discovered my wallet personality: The ${personalityData.personalityTitle} 🎭✨\n\nAnalyze yours at`);
         const url = encodeURIComponent(`${window.location.origin}?address=${address}`);
         const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
         window.open(twitterUrl, "_blank");
+    }
+
+    const shareOnLinkedIn = () => {
+        track('click_share_linkedin', { address });
+        const url = encodeURIComponent(`${window.location.origin}?address=${address}`);
+        const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+        window.open(linkedInUrl, "_blank");
     }
 
     const copyLink = () => {
@@ -338,6 +345,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                             <DropdownMenuItem onClick={shareOnTwitter}>
                                 <Twitter className="mr-2 h-4 w-4" />
                                 <span>Share on Twitter</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={shareOnLinkedIn}>
+                                <Linkedin className="mr-2 h-4 w-4" />
+                                <span>Share on LinkedIn</span>
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
