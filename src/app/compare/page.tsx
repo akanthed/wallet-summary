@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { AnalysisResult } from "@/lib/types";
-import { ArrowRight, Sparkles, RefreshCw, Info, CheckCircle2, XCircle, Users, Loader2 } from "lucide-react";
+import { Users, Loader2, XCircle, CheckCircle2 } from "lucide-react";
 import { getRateLimit } from "@/lib/rate-limit";
 import { track } from "@/lib/analytics";
 import Link from "next/link";
@@ -18,6 +18,7 @@ import { Footer } from "@/components/footer";
 import { Separator } from "@/components/ui/separator";
 import { Badges } from "@/components/badges";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const WALLET_ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const ENS_REGEX = /^(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/;
@@ -26,102 +27,123 @@ function isValidAddress(address: string): boolean {
     return WALLET_ADDRESS_REGEX.test(address) || ENS_REGEX.test(address);
 }
 
-type ComparisonResult = {
-    wallet1: AnalysisResult | null;
-    wallet2: AnalysisResult | null;
-}
 
-function WalletComparisonResult({ result, address1, address2 }: { result: ComparisonResult, address1: string, address2: string }) {
-    
-    const renderWalletCard = (walletResult: AnalysisResult | null, address: string, title: string) => {
-        if (!walletResult) {
-            return (
-                <Card className="flex-1 w-full flex items-center justify-center min-h-[300px]">
-                    <CardContent className="p-6 text-center">
-                        <XCircle className="h-8 w-8 text-destructive mx-auto mb-4" />
-                        <CardTitle className="text-lg mb-2">Analysis Failed</CardTitle>
-                        <p className="text-muted-foreground">No data found for this wallet. Please check the address.</p>
-                        <p className="text-xs text-muted-foreground mt-2 truncate">{address}</p>
-                    </CardContent>
-                </Card>
-            )
-        }
-
-        const { personalityData, stats, badges } = walletResult;
-
+function WalletResultCard({ 
+    walletResult, 
+    address, 
+    title, 
+    isLoading 
+}: { 
+    walletResult: AnalysisResult | null, 
+    address: string, 
+    title: string, 
+    isLoading: boolean 
+}) {
+    if (isLoading) {
         return (
-            <Card className="flex-1 w-full animate-in fade-in-0 duration-500">
+            <Card className="flex-1 w-full animate-pulse">
                 <CardHeader>
-                    <CardTitle className="text-xl sm:text-2xl font-headline truncate" title={address}>{title}</CardTitle>
-                    <p className="text-sm text-muted-foreground truncate">{address}</p>
+                    <Skeleton className="h-8 w-1/2" />
+                    <Skeleton className="h-4 w-3/4" />
                 </CardHeader>
-                <CardContent className="space-y-6 p-6">
+                <CardContent className="p-6 space-y-6">
                     <div className="text-center space-y-2">
-                        <h3 className="text-2xl sm:text-3xl font-bold font-headline text-primary">{personalityData.personalityTitle}</h3>
-                        <p className="text-sm text-muted-foreground">{personalityData.oneLineSummary}</p>
+                        <Skeleton className="h-10 w-3/4 mx-auto" />
+                        <Skeleton className="h-5 w-full mx-auto" />
                     </div>
-                    
                     <div className="flex flex-wrap justify-center gap-2">
-                        {personalityData.traits.map((trait, index) => (
-                            <Badge key={index} variant="secondary" className="text-sm px-3 py-1">{trait}</Badge>
+                        <Skeleton className="h-8 w-20" />
+                        <Skeleton className="h-8 w-20" />
+                        <Skeleton className="h-8 w-20" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-left">
+                        {[...Array(4)].map((_, i) => (
+                             <Card key={i}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <Skeleton className="h-4 w-1/2" />
+                                </CardHeader>
+                                <CardContent>
+                                     <Skeleton className="h-7 w-3/4" />
+                                </CardContent>
+                            </Card>
                         ))}
                     </div>
-
-                    <div className="grid grid-cols-2 gap-4 text-left">
-                       <StatsCard title="Age" value={`${stats.walletAge} days`} icon={CalendarDays} className="text-xs"/>
-                       <StatsCard title="TXs" value={stats.txCount} icon={Repeat} />
-                       <StatsCard title="Balance" value={`${parseFloat(stats.balance).toFixed(4)} ETH`} icon={Wallet} />
-                       <StatsCard title="Activity" value={stats.activityStatus} icon={Activity} />
-                    </div>
-
-                    {badges && badges.length > 0 && (
-                        <>
-                            <Separator />
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-headline font-semibold text-center">Achievements ({badges.length})</h3>
-                                <TooltipProvider>
-                                    <Badges badges={badges} />
-                                </TooltipProvider>
-                            </div>
-                        </>
-                    )}
                 </CardContent>
             </Card>
         )
     }
 
+    if (!walletResult) {
+        return (
+            <Card className="flex-1 w-full flex items-center justify-center min-h-[300px] border-destructive/50">
+                <CardContent className="p-6 text-center">
+                    <XCircle className="h-8 w-8 text-destructive mx-auto mb-4" />
+                    <CardTitle className="text-lg mb-2">Analysis Failed</CardTitle>
+                    <p className="text-muted-foreground">No data found for this wallet. Please check the address.</p>
+                    <p className="text-xs text-muted-foreground mt-2 truncate">{address}</p>
+                </CardContent>
+            </Card>
+        )
+    }
+
+    const { personalityData, stats, badges } = walletResult;
+
     return (
-        <div className="container mx-auto max-w-7xl px-4 py-12 sm:py-16">
-            <h2 className="text-3xl sm:text-4xl font-headline font-bold text-center mb-12">Wallet Comparison</h2>
-            <div className="flex flex-col lg:flex-row items-start justify-center gap-8">
-                {renderWalletCard(result.wallet1, address1, "Wallet 1")}
-                <div className="flex items-center justify-center p-4">
-                    <Users className="h-8 w-8 text-muted-foreground" />
+        <Card className="flex-1 w-full animate-in fade-in-0 duration-500">
+            <CardHeader>
+                <CardTitle className="text-xl sm:text-2xl font-headline truncate" title={address}>{title}</CardTitle>
+                <p className="text-sm text-muted-foreground truncate">{address}</p>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+                <div className="text-center space-y-2">
+                    <h3 className="text-2xl sm:text-3xl font-bold font-headline text-primary">{personalityData.personalityTitle}</h3>
+                    <p className="text-sm text-muted-foreground">{personalityData.oneLineSummary}</p>
                 </div>
-                {renderWalletCard(result.wallet2, address2, "Wallet 2")}
-            </div>
-        </div>
+                
+                <div className="flex flex-wrap justify-center gap-2">
+                    {personalityData.traits.map((trait, index) => (
+                        <Badge key={index} variant="secondary" className="text-sm px-3 py-1">{trait}</Badge>
+                    ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 text-left">
+                   <StatsCard title="Age" value={`${stats.walletAge} days`} icon={CalendarDays} className="text-xs"/>
+                   <StatsCard title="TXs" value={stats.txCount} icon={Repeat} />
+                   <StatsCard title="Balance" value={`${parseFloat(stats.balance).toFixed(4)} ETH`} icon={Wallet} />
+                   <StatsCard title="Activity" value={stats.activityStatus} icon={Activity} />
+                </div>
+
+                {badges && badges.length > 0 && (
+                    <>
+                        <Separator />
+                        <div className="space-y-4">
+                            <h3 className="text-lg font-headline font-semibold text-center">Achievements ({badges.length})</h3>
+                            <TooltipProvider>
+                                <Badges badges={badges} />
+                            </TooltipProvider>
+                        </div>
+                    </>
+                )}
+            </CardContent>
+        </Card>
     )
 }
 
-
 export default function ComparePage() {
     const [addresses, setAddresses] = useState({ wallet1: "", wallet2: "" });
-    const [result, setResult] = useState<ComparisonResult | null>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [wallet1Result, setWallet1Result] = useState<AnalysisResult | null>(null);
+    const [wallet2Result, setWallet2Result] = useState<AnalysisResult | null>(null);
+    const [isLoading1, setIsLoading1] = useState(false);
+    const [isLoading2, setIsLoading2] = useState(false);
     const [isPending, startTransition] = useTransition();
     const [rateLimit, setRateLimit] = useState({ allowed: true, remaining: 5, resetTime: '' });
+    const [hasCompared, setHasCompared] = useState(false);
 
     const { toast } = useToast();
 
-    const areAddressesValid = useMemo(() => {
-        const { wallet1, wallet2 } = addresses;
-        return (wallet1 ? isValidAddress(wallet1) : true) && (wallet2 ? isValidAddress(wallet2) : true);
-    }, [addresses]);
-    
     const canCompare = useMemo(() => {
-        return isValidAddress(addresses.wallet1) && isValidAddress(addresses.wallet2) && !isPending && !isLoading;
-    }, [addresses, isPending, isLoading]);
+        return isValidAddress(addresses.wallet1) && isValidAddress(addresses.wallet2) && !isPending && !(isLoading1 || isLoading2);
+    }, [addresses, isPending, isLoading1, isLoading2]);
 
 
     useEffect(() => {
@@ -153,6 +175,25 @@ export default function ComparePage() {
         setAddresses(prev => ({ ...prev, [wallet]: value }));
     }
 
+    const analyzeWallet = async (address: string): Promise<AnalysisResult | null> => {
+        try {
+            const response = await fetch("/api/analyze", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ address }),
+            });
+    
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Analysis failed.");
+            }
+            return response.json();
+        } catch (error) {
+            console.error(`Error analyzing wallet ${address}:`, error);
+            return null; // Return null on failure for this specific wallet
+        }
+    };
+
     const handleCompare = async (address1 = addresses.wallet1, address2 = addresses.wallet2) => {
         if (!isValidAddress(address1) || !isValidAddress(address2)) {
             toast({
@@ -177,47 +218,63 @@ export default function ComparePage() {
             return;
         }
         
-        setIsLoading(true);
-        setResult(null);
+        setIsLoading1(true);
+        setIsLoading2(true);
+        setWallet1Result(null);
+        setWallet2Result(null);
+        setHasCompared(true);
 
-        try {
-            const response = await fetch("/api/compare", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ address1, address2 }),
-            });
+        const [result1, result2] = await Promise.allSettled([
+            analyzeWallet(address1),
+            analyzeWallet(address2)
+        ]);
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || "An unknown error occurred.");
-            }
+        if (result1.status === 'fulfilled') {
+            setWallet1Result(result1.value);
+            if (result1.value) track('comparison_success', { address: address1 });
+            else track('comparison_failed', { address: address1, error: 'No data returned' });
+        } else {
+            setWallet1Result(null);
+            track('comparison_failed', { address: address1, error: result1.reason.message });
+        }
+        setIsLoading1(false);
 
-            const data: ComparisonResult = await response.json();
-            setResult(data);
-            track('comparison_success', { address1, address2 });
+        if (result2.status === 'fulfilled') {
+            setWallet2Result(result2.value);
+            if (result2.value) track('comparison_success', { address: address2 });
+            else track('comparison_failed', { address: address2, error: 'No data returned' });
+        } else {
+            setWallet2Result(null);
+            track('comparison_failed', { address: address2, error: result2.reason.message });
+        }
+        setIsLoading2(false);
 
-        } catch (error) {
-            const message = error instanceof Error ? error.message : "An unknown error occurred.";
+        if (result1.status === 'rejected' && result2.status === 'rejected') {
             toast({
                 title: "Comparison Failed",
-                description: message,
+                description: "Could not retrieve data for either wallet.",
                 variant: "destructive",
             });
-            setResult(null);
-            track('comparison_failed', { address1, address2, error: message });
-        } finally {
-            setIsLoading(false);
         }
     };
     
-    if (result) {
+    if (hasCompared) {
         return (
             <div className="flex min-h-dvh flex-col">
               <main className="flex-1">
-                <WalletComparisonResult result={result} address1={addresses.wallet1} address2={addresses.wallet2} />
+                <div className="container mx-auto max-w-7xl px-4 py-12 sm:py-16">
+                    <h2 className="text-3xl sm:text-4xl font-headline font-bold text-center mb-12">Wallet Comparison</h2>
+                    <div className="flex flex-col lg:flex-row items-start justify-center gap-8">
+                        <WalletResultCard walletResult={wallet1Result} address={addresses.wallet1} title="Wallet 1" isLoading={isLoading1} />
+                        <div className="flex items-center justify-center p-4">
+                            <Users className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <WalletResultCard walletResult={wallet2Result} address={addresses.wallet2} title="Wallet 2" isLoading={isLoading2} />
+                    </div>
+                </div>
                 <div className="text-center pb-16">
                     <Button onClick={() => {
-                        setResult(null);
+                        setHasCompared(false);
                         setAddresses({ wallet1: "", wallet2: "" });
                         window.history.pushState({}, '', '/compare');
                     }} size="lg">Start New Comparison</Button>
@@ -251,7 +308,7 @@ export default function ComparePage() {
                                     className={`h-12 w-full text-center sm:text-left pr-10 ${!addresses.wallet1 || isValidAddress(addresses.wallet1) ? '' : 'border-destructive'}`}
                                     value={addresses.wallet1}
                                     onChange={(e) => handleAddressChange('wallet1', e.target.value)}
-                                    disabled={!rateLimit.allowed || isPending || isLoading}
+                                    disabled={!rateLimit.allowed || isPending || isLoading1 || isLoading2}
                                 />
                                 {addresses.wallet1 && (
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -270,7 +327,7 @@ export default function ComparePage() {
                                     className={`h-12 w-full text-center sm:text-left pr-10 ${!addresses.wallet2 || isValidAddress(addresses.wallet2) ? '' : 'border-destructive'}`}
                                     value={addresses.wallet2}
                                     onChange={(e) => handleAddressChange('wallet2', e.target.value)}
-                                    disabled={!rateLimit.allowed || isPending || isLoading}
+                                    disabled={!rateLimit.allowed || isPending || isLoading1 || isLoading2}
                                 />
                                 {addresses.wallet2 && (
                                     <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -289,8 +346,8 @@ export default function ComparePage() {
                             onClick={() => handleCompare()}
                             disabled={!canCompare}
                         >
-                            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Users className="mr-2 h-4 w-4" />}
-                            {isLoading ? 'Comparing...' : 'Compare Wallets'}
+                            {(isLoading1 || isLoading2) ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Users className="mr-2 h-4 w-4" />}
+                            {(isLoading1 || isLoading2) ? 'Comparing...' : 'Compare Wallets'}
                         </Button>
                     </div>
 
@@ -317,5 +374,3 @@ export default function ComparePage() {
 }
 
     
-
-  
