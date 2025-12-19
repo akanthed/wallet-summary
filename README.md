@@ -185,13 +185,13 @@ This project is for **educational and exploratory purposes only**.
 
 Planned features for future versions:
 
-- [ ] Shareable image cards (PNG export)
-- [ ] Wallet vs Wallet comparison
-- [ ] Timeline visualization of major events
-- [ ] Achievement badges system
+- [x] Shareable image cards (PNG export)
+- [x] Wallet vs Wallet comparison
+- [x] Timeline visualization of major events
+- [x] Achievement badges system
+- [x] Caching & performance improvements
 - [ ] Famous wallets gallery
 - [ ] Multiple blockchain support (Polygon, BSC, etc.)
-- [ ] Caching & performance improvements
 - [ ] Mobile app
 
 Contributions welcome! 🚀
