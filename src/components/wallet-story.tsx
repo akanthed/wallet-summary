@@ -23,9 +23,9 @@ import { useState, useRef, useEffect } from "react";
 import { track } from "@/lib/analytics";
 import { Timeline } from "./timeline";
 import { Badges } from "./badges";
+import { WalletStoryExport } from "./wallet-story-export";
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
-import { WalletStoryExport } from "./wallet-story-export";
 
 
 type WalletStoryProps = {
@@ -38,8 +38,8 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { toast } = useToast();
     const { personalityData, timelineEvents, badges } = result;
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
-    const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
-    const [isDownloadingPng, setIsDownloadingPng] = useState(false);
+    const [isExportingPng, setIsExportingPng] = useState(false);
+    const [isExportingPdf, setIsExportingPdf] = useState(false);
 
     const exportRef = useRef<HTMLDivElement>(null);
 
@@ -58,131 +58,143 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         return `wallet-story-${personality}-${dateStr}.${extension}`;
     }
 
-    const generateImage = async (): Promise<string | null> => {
+    /**
+     * Safety check before export
+     */
+    const verifyExportReady = (): boolean => {
         const node = exportRef.current;
         if (!node) {
-          console.error("Export node not found");
-          return null;
+            console.warn('[Export] Export ref not found');
+            return false;
         }
-
-        try {
-            // Wait longer for all fonts and content to load
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            const dataUrl = await toPng(node, {
-              cacheBust: true,
-              pixelRatio: 2,
-              backgroundColor: '#0b0b10',
-              width: 1080,
-              height: node.scrollHeight,
-              style: {
-                transform: 'scale(1)',
-                transformOrigin: 'top left',
-              }
-            });
-            return dataUrl;
-        } catch (error) {
-            console.error('Error generating image data', error);
-            return null;
+        if (node.offsetHeight === 0) {
+            console.warn('[Export] Export container has zero height');
+            return false;
         }
-    }
+        return true;
+    };
 
-
-    const handleDownloadPng = async () => {
-        setIsDownloadingPng(true);
+    /**
+     * Export as PNG using html-to-image
+     * Uses white background, explicit dimensions
+     */
+    const exportAsPNG = async () => {
+        if (isExportingPng) return;
+        setIsExportingPng(true);
         track('click_download_png', { address });
 
         try {
-            const dataUrl = await generateImage();
-            if (!dataUrl) {
-                throw new Error("Failed to generate image");
+            if (!verifyExportReady()) {
+                throw new Error('Export component not ready');
             }
 
+            const node = exportRef.current!;
+            
+            // Wait for render cycle to complete
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            const dataUrl = await toPng(node, {
+                backgroundColor: '#ffffff',
+                width: 1080,
+                height: node.scrollHeight,
+                pixelRatio: 3,
+                cacheBust: true,
+            });
+
+            // Trigger download
             const link = document.createElement('a');
             link.download = generateFilename('png');
             link.href = dataUrl;
             link.click();
-            link.remove(); // Clean up
-            
+            link.remove();
+
             toast({
                 title: "Success!",
                 description: "Image downloaded successfully.",
             });
         } catch (error) {
-            console.error('Error downloading PNG', error);
+            console.error('[Export PNG Error]', error);
             toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to download image. Please try again.",
+                title: "Export Failed",
+                description: error instanceof Error ? error.message : "Failed to generate image. Please try again.",
                 variant: "destructive"
             });
         } finally {
-            setIsDownloadingPng(false);
+            setIsExportingPng(false);
         }
-    }
+    };
 
-    const handleDownloadPdf = async () => {
-        setIsDownloadingPdf(true);
+    /**
+     * Export as PDF
+     * Generates PNG first, then converts to PDF
+     */
+    const exportAsPDF = async () => {
+        if (isExportingPdf) return;
+        setIsExportingPdf(true);
         track('click_download_pdf', { address });
-        
+
         try {
-            const dataUrl = await generateImage();
-            if (!dataUrl) {
-                throw new Error("Failed to generate image for PDF");
+            if (!verifyExportReady()) {
+                throw new Error('Export component not ready');
             }
 
+            const node = exportRef.current!;
+            
+            // Wait for render cycle to complete
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Generate PNG first
+            const dataUrl = await toPng(node, {
+                backgroundColor: '#ffffff',
+                width: 1080,
+                height: node.scrollHeight,
+                pixelRatio: 3,
+                cacheBust: true,
+            });
+
+            // Create PDF from PNG
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'px',
                 format: 'a4',
-                hotfixes: ['px_scaling']
             });
-            
+
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            
-            // Wrap image loading in Promise for better control
+
+            // Load image and calculate dimensions
             await new Promise<void>((resolve, reject) => {
                 const img = new Image();
-                let timeoutId: NodeJS.Timeout;
                 
                 img.onload = () => {
                     try {
-                        clearTimeout(timeoutId);
                         const imgWidth = img.naturalWidth;
                         const imgHeight = img.naturalHeight;
-                        
-                        // Calculate scaling to fit page with margins
+
+                        // Scale to fit width with margins
                         const margin = 20;
                         const availableWidth = pageWidth - (margin * 2);
-                        const availableHeight = pageHeight - (margin * 2);
-                        
-                        const widthRatio = availableWidth / imgWidth;
-                        const heightRatio = availableHeight / imgHeight;
-                        const scale = Math.min(widthRatio, heightRatio);
+                        const scale = availableWidth / imgWidth;
                         
                         const scaledWidth = imgWidth * scale;
                         const scaledHeight = imgHeight * scale;
-                        
-                        const x = (pageWidth - scaledWidth) / 2;
-                        const y = (pageHeight - scaledHeight) / 2;
-                        
-                        pdf.addImage(dataUrl, 'PNG', x, y, scaledWidth, scaledHeight, undefined, 'FAST');
+
+                        // Center horizontally, start from top with margin
+                        const x = margin;
+                        const y = margin;
+
+                        pdf.addImage(dataUrl, 'PNG', x, y, scaledWidth, scaledHeight);
                         pdf.save(generateFilename('pdf'));
                         resolve();
-                    } catch (error) {
-                        reject(error);
+                    } catch (err) {
+                        reject(err);
                     }
                 };
+
+                img.onerror = () => reject(new Error('Failed to load image for PDF'));
                 
-                img.onerror = () => {
-                    clearTimeout(timeoutId);
-                    reject(new Error('Failed to load image'));
-                };
-                
-                // Set timeout to prevent hanging (10 seconds)
-                timeoutId = setTimeout(() => {
-                    reject(new Error('Image loading timeout'));
-                }, 10000);
+                // Timeout after 10 seconds
+                setTimeout(() => reject(new Error('PDF generation timeout')), 10000);
                 
                 img.src = dataUrl;
             });
@@ -192,14 +204,14 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 description: "PDF downloaded successfully.",
             });
         } catch (error) {
-            console.error('Error generating PDF', error);
+            console.error('[Export PDF Error]', error);
             toast({
-                title: "Error",
+                title: "Export Failed",
                 description: error instanceof Error ? error.message : "Failed to generate PDF. Please try again.",
                 variant: "destructive"
             });
         } finally {
-            setIsDownloadingPdf(false);
+            setIsExportingPdf(false);
         }
     };
     
@@ -390,8 +402,8 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 <span>Share on LinkedIn</span>
                             </DropdownMenuItem>
                              <Separator className="my-1" />
-                             <DropdownMenuItem onClick={handleDownloadPng} disabled={isDownloadingPng}>
-                                {isDownloadingPng ? (
+                            <DropdownMenuItem onClick={exportAsPNG} disabled={isExportingPng}>
+                                {isExportingPng ? (
                                     <div className="flex items-center">
                                         <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -402,13 +414,13 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 ) : (
                                     <>
                                         <ImageIcon className="mr-2 h-4 w-4" />
-                                        <span>Download Image (PNG)</span>
+                                        <span>Download Image</span>
                                     </>
                                 )}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
-                                {isDownloadingPdf ? (
-                                     <div className="flex items-center">
+                            <DropdownMenuItem onClick={exportAsPDF} disabled={isExportingPdf}>
+                                {isExportingPdf ? (
+                                    <div className="flex items-center">
                                         <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>

@@ -1,115 +1,223 @@
-
 import { forwardRef } from "react";
 import { AnalysisResult } from "@/lib/types";
-import { Icons } from "./icons";
-import { Badge } from "./ui/badge";
-import { CalendarDays, Repeat, Wallet, Activity } from "lucide-react";
-import { StatsCard } from "./stats-card";
 
 type WalletStoryExportProps = {
   result: AnalysisResult;
   address: string;
 };
 
-// Fixed size for a high-quality export, can be scaled down.
-const CARD_WIDTH = 1080;
-
+/**
+ * LIGHT THEME EXPORT COMPONENT
+ * 
+ * This component is designed ONLY for PNG/PDF export.
+ * - Uses explicit inline styles (NO Tailwind, NO CSS variables)
+ * - White background with dark text for reliable rendering
+ * - Fixed dimensions for consistent output
+ * - No animations, gradients, or opacity tricks
+ */
 export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportProps>(
   ({ result, address }, ref) => {
     const { personalityData, stats, badges } = result;
-    const truncatedAddress = `${address.substring(0, 6)}...${address.substring(
-      address.length - 4
-    )}`;
+    
+    const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+
+    // Inline styles only - no Tailwind classes
+    const styles = {
+      container: {
+        position: 'absolute' as const,
+        top: '-9999px',
+        left: '0',
+        width: '1080px',
+        minHeight: '1350px',
+        backgroundColor: '#ffffff',
+        color: '#111111',
+        padding: '48px',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        boxSizing: 'border-box' as const,
+        visibility: 'visible' as const,
+        opacity: 1,
+      },
+      header: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '40px',
+        paddingBottom: '20px',
+        borderBottom: '2px solid #e5e7eb',
+      },
+      logo: {
+        fontSize: '24px',
+        fontWeight: 700,
+        color: '#6366f1',
+      },
+      addressText: {
+        fontSize: '16px',
+        fontFamily: 'monospace',
+        color: '#6b7280',
+      },
+      title: {
+        fontSize: '48px',
+        fontWeight: 700,
+        color: '#111111',
+        marginBottom: '16px',
+        textAlign: 'center' as const,
+        lineHeight: 1.2,
+      },
+      summary: {
+        fontSize: '20px',
+        color: '#4b5563',
+        textAlign: 'center' as const,
+        marginBottom: '32px',
+        lineHeight: 1.5,
+      },
+      sectionTitle: {
+        fontSize: '18px',
+        fontWeight: 600,
+        color: '#111111',
+        marginBottom: '16px',
+        paddingBottom: '8px',
+        borderBottom: '1px solid #e5e7eb',
+      },
+      traitsContainer: {
+        display: 'flex',
+        flexWrap: 'wrap' as const,
+        gap: '12px',
+        justifyContent: 'center',
+        marginBottom: '32px',
+      },
+      trait: {
+        backgroundColor: '#f3f4f6',
+        color: '#374151',
+        padding: '8px 16px',
+        borderRadius: '20px',
+        fontSize: '14px',
+        fontWeight: 500,
+        border: '1px solid #e5e7eb',
+      },
+      storySection: {
+        marginBottom: '32px',
+      },
+      storyText: {
+        fontSize: '16px',
+        color: '#374151',
+        lineHeight: 1.8,
+        whiteSpace: 'pre-wrap' as const,
+      },
+      statsGrid: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: '16px',
+        marginBottom: '32px',
+      },
+      statCard: {
+        backgroundColor: '#f9fafb',
+        border: '1px solid #e5e7eb',
+        borderRadius: '12px',
+        padding: '20px',
+      },
+      statLabel: {
+        fontSize: '14px',
+        color: '#6b7280',
+        marginBottom: '4px',
+      },
+      statValue: {
+        fontSize: '24px',
+        fontWeight: 600,
+        color: '#111111',
+      },
+      badgesSection: {
+        marginBottom: '32px',
+      },
+      badgeItem: {
+        padding: '12px 0',
+        borderBottom: '1px solid #f3f4f6',
+      },
+      badgeName: {
+        fontWeight: 600,
+        color: '#6366f1',
+      },
+      badgeRarity: {
+        fontSize: '12px',
+        color: '#9ca3af',
+        marginLeft: '8px',
+      },
+      badgeDescription: {
+        fontSize: '14px',
+        color: '#6b7280',
+        marginTop: '4px',
+      },
+      footer: {
+        marginTop: 'auto',
+        paddingTop: '24px',
+        borderTop: '1px solid #e5e7eb',
+        textAlign: 'center' as const,
+        fontSize: '14px',
+        color: '#9ca3af',
+      },
+    };
 
     return (
-      <div
-        ref={ref}
-        className="font-body"
-        style={{
-          position: 'fixed',
-          top: '0',
-          left: '-9999px',
-          width: CARD_WIDTH,
-          minHeight: 1350,
-          backgroundColor: "#0b0b10",
-          color: "#E5E7EB",
-          fontFamily: "'Space Grotesk', sans-serif",
-          zIndex: -1,
-        }}
-      >
-        <div className="h-full w-full flex flex-col p-16 justify-between gap-12">
-          {/* Header */}
-          <header className="flex items-start justify-between">
-            <div className="flex items-center gap-6">
-              <Icons.logo className="h-12 w-12 text-purple-500" />
-              <h1 className="text-3xl font-bold tracking-wider">
-                Wallet Story
-              </h1>
-            </div>
-            <div className="text-right">
-              <p className="font-mono text-2xl">{truncatedAddress}</p>
-            </div>
-          </header>
+      <div ref={ref} style={styles.container}>
+        {/* Header */}
+        <div style={styles.header}>
+          <div style={styles.logo}>🔮 Wallet Story</div>
+          <div style={styles.addressText}>{truncatedAddress}</div>
+        </div>
 
-          {/* Main Content */}
-          <main className="flex flex-col items-center justify-center text-center space-y-10">
-            <h2 className="text-8xl font-bold tracking-tight text-white">
-              {personalityData.personalityTitle}
-            </h2>
-            <p className="text-3xl text-gray-400 max-w-4xl">
-              {personalityData.oneLineSummary}
-            </p>
-            <div className="flex gap-4">
-              {personalityData.traits.map((trait, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="text-2xl px-8 py-4 bg-gray-800/70 border-gray-700"
-                >
-                  {trait}
-                </Badge>
-              ))}
-            </div>
-          </main>
+        {/* Title & Summary */}
+        <h1 style={styles.title}>{personalityData.personalityTitle}</h1>
+        <p style={styles.summary}>{personalityData.oneLineSummary}</p>
 
-          {/* Story */}
-           <div className="space-y-4 text-left">
-              <h3 className="text-2xl font-bold border-b border-gray-700 pb-3" style={{ fontFamily: "Space Grotesk, sans-serif" }}>Personality Story</h3>
-              <div className="text-xl text-gray-300 leading-relaxed space-y-4">
-                {personalityData.personalityStory.split('\n\n').map((paragraph, i) => (
-                    <p key={i}>{paragraph}</p>
-                ))}
-              </div>
-            </div>
+        {/* Traits */}
+        <div style={styles.traitsContainer}>
+          {personalityData.traits.map((trait, index) => (
+            <span key={index} style={styles.trait}>{trait}</span>
+          ))}
+        </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-6">
-             <StatsCard title="Wallet Age" value={`${stats.walletAge} days`} icon={CalendarDays} className="bg-gray-800/50 border-gray-700" />
-             <StatsCard title="Transactions" value={stats.txCount} icon={Repeat} className="bg-gray-800/50 border-gray-700" />
-             <StatsCard title="ETH Balance" value={`${parseFloat(stats.balance).toFixed(4)} ETH`} icon={Wallet} className="bg-gray-800/50 border-gray-700" />
-             <StatsCard title="Activity" value={stats.activityStatus} icon={Activity} className="bg-gray-800/50 border-gray-700" />
+        {/* Personality Story */}
+        <div style={styles.storySection}>
+          <h2 style={styles.sectionTitle}>Personality Story</h2>
+          <p style={styles.storyText}>{personalityData.personalityStory}</p>
+        </div>
+
+        {/* Stats Grid */}
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <div style={styles.statLabel}>Wallet Age</div>
+            <div style={styles.statValue}>{stats.walletAge} days</div>
           </div>
+          <div style={styles.statCard}>
+            <div style={styles.statLabel}>Total Transactions</div>
+            <div style={styles.statValue}>{stats.txCount.toLocaleString()}</div>
+          </div>
+          <div style={styles.statCard}>
+            <div style={styles.statLabel}>ETH Balance</div>
+            <div style={styles.statValue}>{parseFloat(stats.balance).toFixed(4)} ETH</div>
+          </div>
+          <div style={styles.statCard}>
+            <div style={styles.statLabel}>Activity Status</div>
+            <div style={styles.statValue}>{stats.activityStatus}</div>
+          </div>
+        </div>
 
-          {/* Achievements */}
-           {badges && badges.length > 0 && (
-              <div className="space-y-6 pt-4">
-                <h3 className="text-2xl font-bold border-b border-gray-700 pb-3" style={{ fontFamily: "Space Grotesk, sans-serif" }}>
-                  Achievements ({badges.length})
-                </h3>
-                <ul className="list-disc list-inside space-y-3 text-lg">
-                  {badges.map((badge) => (
-                    <li key={badge.id}>
-                      <span className="font-semibold text-purple-400">{badge.name} ({badge.rarity}):</span> <span className="text-gray-400">{badge.description}</span>
-                    </li>
-                  ))}
-                </ul>
+        {/* Achievements */}
+        {badges && badges.length > 0 && (
+          <div style={styles.badgesSection}>
+            <h2 style={styles.sectionTitle}>Achievements ({badges.length})</h2>
+            {badges.map((badge) => (
+              <div key={badge.id} style={styles.badgeItem}>
+                <span style={styles.badgeName}>{badge.name}</span>
+                <span style={styles.badgeRarity}>({badge.rarity})</span>
+                <div style={styles.badgeDescription}>{badge.description}</div>
               </div>
-            )}
-          
-          {/* Footer */}
-          <footer className="w-full flex items-center justify-center text-center pt-8 border-t border-gray-800">
-            <p className="text-xl text-gray-500">wallet-summary.vercel.app</p>
-          </footer>
+            ))}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div style={styles.footer}>
+          Generated by Wallet Story Explorer
         </div>
       </div>
     );
