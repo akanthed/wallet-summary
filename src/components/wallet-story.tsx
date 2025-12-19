@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin, Download, Camera } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin, Download } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +25,7 @@ import { Timeline } from "./timeline";
 import { Badges } from "./badges";
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
-import { PdfCard } from "./pdf-card";
+import { WalletStoryPDF } from "./wallet-story-pdf";
 
 
 type WalletStoryProps = {
@@ -40,7 +40,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
-    const pdfCardRef = useRef<HTMLDivElement>(null);
+    const pdfRef = useRef<HTMLDivElement>(null);
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -57,32 +57,47 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     }
 
     const handleDownloadPdf = async () => {
-        const node = pdfCardRef.current;
-        if (!node) return;
+        const node = pdfRef.current;
+        if (!node) {
+            toast({
+                title: "Error",
+                description: "Could not find PDF content to download.",
+                variant: "destructive"
+            });
+            return;
+        }
         
         setIsDownloadingPdf(true);
         track('click_download_pdf', { address });
 
-        // Temporarily make the component visible for capture
-        node.style.visibility = 'visible';
+        // Add a small delay to ensure fonts and styles are loaded
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         try {
             const dataUrl = await toPng(node, { 
-                cacheBust: true, 
-                pixelRatio: 2,
-                quality: 0.95
+                cacheBust: true,
+                pixelRatio: 2, // Use scale: 2 for better quality
+                backgroundColor: '#ffffff'
             });
             
+            // A4 page size in pixels at 96 DPI is 794x1123. We use jsPDF's internal scaling.
+            // A4 dimensions in points: 595.28 x 841.89
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'px',
-                format: [node.offsetWidth, node.offsetHeight]
+                format: 'a4' // A4 size
             });
             
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = node.offsetWidth;
+            const imgHeight = node.offsetHeight;
+            const ratio = imgWidth / imgHeight;
+
+            const canvasWidth = pdfWidth - 24; // 12px margin on each side
+            const canvasHeight = canvasWidth / ratio;
             
-            pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+            pdf.addImage(dataUrl, 'PNG', 12, 12, canvasWidth, canvasHeight);
             pdf.save(generateFilename('pdf'));
             
             toast({
@@ -98,8 +113,6 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 variant: "destructive"
             });
         } finally {
-            // Hide the component again
-            node.style.visibility = 'hidden';
             setIsDownloadingPdf(false);
         }
     };
@@ -149,7 +162,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <>
-    <PdfCard ref={pdfCardRef} result={result} address={address} />
+    {/* Hidden component for PDF generation */}
+    <WalletStoryPDF ref={pdfRef} result={result} address={address} />
+
 
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <TooltipProvider>
@@ -295,12 +310,12 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Generating...
+                                        Generating PDF...
                                     </div>
                                 ) : (
                                     <>
                                         <Download className="mr-2 h-4 w-4" />
-                                        <span>Full Report (PDF)</span>
+                                        <span>Download PDF</span>
                                     </>
                                 )}
                             </DropdownMenuItem>
