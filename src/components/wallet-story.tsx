@@ -86,86 +86,112 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         setIsDownloadingPng(true);
         track('click_download_png', { address });
 
-        const dataUrl = await generateImage();
-        if (dataUrl) {
+        try {
+            const dataUrl = await generateImage();
+            if (!dataUrl) {
+                throw new Error("Failed to generate image");
+            }
+
             const link = document.createElement('a');
             link.download = generateFilename('png');
             link.href = dataUrl;
             link.click();
+            link.remove(); // Clean up
+            
             toast({
                 title: "Success!",
                 description: "Image downloaded successfully.",
             });
-        } else {
+        } catch (error) {
+            console.error('Error downloading PNG', error);
             toast({
                 title: "Error",
-                description: "Failed to generate image. Please try again.",
+                description: error instanceof Error ? error.message : "Failed to download image. Please try again.",
                 variant: "destructive"
             });
+        } finally {
+            setIsDownloadingPng(false);
         }
-        setIsDownloadingPng(false);
     }
 
     const handleDownloadPdf = async () => {
         setIsDownloadingPdf(true);
         track('click_download_pdf', { address });
         
-        const dataUrl = await generateImage();
-
-        if (dataUrl) {
-            try {
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'px',
-                    format: 'a4' // A4 size in px at 72 DPI is 595 x 842
-                });
-                
-                const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
-                
-                const img = new Image();
-                img.src = dataUrl;
-                img.onload = () => {
-                    const imgWidth = img.width;
-                    const imgHeight = img.height;
-                    const ratio = imgWidth / imgHeight;
-                    
-                    let canvasWidth = pdfWidth - 24; // 12px margin on each side
-                    let canvasHeight = canvasWidth / ratio;
-                    
-                    if (canvasHeight > pdfHeight - 24) {
-                        canvasHeight = pdfHeight - 24;
-                        canvasWidth = canvasHeight * ratio;
-                    }
-
-                    const x = (pdfWidth - canvasWidth) / 2;
-                    const y = (pdfHeight - canvasHeight) / 2;
-
-                    pdf.addImage(dataUrl, 'PNG', x, y, canvasWidth, canvasHeight);
-                    pdf.save(generateFilename('pdf'));
-                    
-                    toast({
-                        title: "Success!",
-                        description: "PDF downloaded successfully.",
-                    });
-                }
-            } catch (error) {
-                console.error('Error generating PDF', error);
-                toast({
-                    title: "Error",
-                    description: "Failed to generate PDF. Please try again.",
-                    variant: "destructive"
-                });
+        try {
+            const dataUrl = await generateImage();
+            if (!dataUrl) {
+                throw new Error("Failed to generate image for PDF");
             }
-        } else {
-             toast({
+
+            const pdf = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            // Wrap image loading in Promise for better control
+            await new Promise<void>((resolve, reject) => {
+                const img = new Image();
+                let timeoutId: NodeJS.Timeout;
+                
+                img.onload = () => {
+                    try {
+                        clearTimeout(timeoutId);
+                        const imgWidth = img.naturalWidth;
+                        const imgHeight = img.naturalHeight;
+                        const ratio = imgHeight / imgWidth;
+                        
+                        let canvasWidth = pageWidth - 10; // 5mm margin on each side
+                        let canvasHeight = canvasWidth * ratio;
+                        
+                        // If image is taller than page, scale it down
+                        if (canvasHeight > pageHeight - 10) {
+                            canvasHeight = pageHeight - 10;
+                            canvasWidth = canvasHeight / ratio;
+                        }
+
+                        const x = (pageWidth - canvasWidth) / 2;
+                        const y = (pageHeight - canvasHeight) / 2;
+                        
+                        pdf.addImage(dataUrl, 'PNG', x, y, canvasWidth, canvasHeight);
+                        pdf.save(generateFilename('pdf'));
+                        resolve();
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                
+                img.onerror = () => {
+                    clearTimeout(timeoutId);
+                    reject(new Error('Failed to load image'));
+                };
+                
+                // Set timeout to prevent hanging (10 seconds)
+                timeoutId = setTimeout(() => {
+                    reject(new Error('Image loading timeout'));
+                }, 10000);
+                
+                img.src = dataUrl;
+            });
+
+            toast({
+                title: "Success!",
+                description: "PDF downloaded successfully.",
+            });
+        } catch (error) {
+            console.error('Error generating PDF', error);
+            toast({
                 title: "Error",
-                description: "Failed to generate image for PDF. Please try again.",
+                description: error instanceof Error ? error.message : "Failed to generate PDF. Please try again.",
                 variant: "destructive"
             });
+        } finally {
+            setIsDownloadingPdf(false);
         }
-
-        setIsDownloadingPdf(false);
     };
     
 

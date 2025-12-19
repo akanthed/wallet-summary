@@ -184,12 +184,14 @@ export default function ComparePage() {
             });
     
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || "Analysis failed.");
             }
-            return response.json();
+            const data = await response.json();
+            return data;
         } catch (error) {
-            console.error(`Error analyzing wallet ${address}:`, error);
+            const errorMessage = error instanceof Error ? error.message : "Unknown error";
+            console.error(`Error analyzing wallet ${address}:`, errorMessage);
             return null; // Return null on failure for this specific wallet
         }
     };
@@ -224,37 +226,46 @@ export default function ComparePage() {
         setWallet2Result(null);
         setHasCompared(true);
 
-        const [result1, result2] = await Promise.allSettled([
-            analyzeWallet(address1),
-            analyzeWallet(address2)
-        ]);
+        try {
+            // Analyze first wallet
+            const result1 = await analyzeWallet(address1);
+            setWallet1Result(result1);
+            if (result1) {
+                track('comparison_success', { address: address1 });
+            } else {
+                track('comparison_failed', { address: address1, error: 'No data returned' });
+            }
+            setIsLoading1(false);
 
-        if (result1.status === 'fulfilled') {
-            setWallet1Result(result1.value);
-            if (result1.value) track('comparison_success', { address: address1 });
-            else track('comparison_failed', { address: address1, error: 'No data returned' });
-        } else {
-            setWallet1Result(null);
-            track('comparison_failed', { address: address1, error: result1.reason.message });
-        }
-        setIsLoading1(false);
+            // Add a small delay to avoid rate limiting issues
+            await new Promise(resolve => setTimeout(resolve, 500));
 
-        if (result2.status === 'fulfilled') {
-            setWallet2Result(result2.value);
-            if (result2.value) track('comparison_success', { address: address2 });
-            else track('comparison_failed', { address: address2, error: 'No data returned' });
-        } else {
-            setWallet2Result(null);
-            track('comparison_failed', { address: address2, error: result2.reason.message });
-        }
-        setIsLoading2(false);
+            // Analyze second wallet
+            const result2 = await analyzeWallet(address2);
+            setWallet2Result(result2);
+            if (result2) {
+                track('comparison_success', { address: address2 });
+            } else {
+                track('comparison_failed', { address: address2, error: 'No data returned' });
+            }
+            setIsLoading2(false);
 
-        if (result1.status === 'rejected' && result2.status === 'rejected') {
+            if (!result1 && !result2) {
+                toast({
+                    title: "Comparison Failed",
+                    description: "Could not retrieve data for either wallet.",
+                    variant: "destructive",
+                });
+            }
+        } catch (error) {
+            console.error('Error during comparison:', error);
             toast({
                 title: "Comparison Failed",
-                description: "Could not retrieve data for either wallet.",
+                description: "An unexpected error occurred during comparison.",
                 variant: "destructive",
             });
+            setIsLoading1(false);
+            setIsLoading2(false);
         }
     };
     

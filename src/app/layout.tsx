@@ -10,6 +10,9 @@ const description = 'Turn any Ethereum wallet into a readable story. Discover it
 export const metadata: Metadata = {
   title: title,
   description: description,
+  icons: {
+    icon: '/favicon.svg',
+  },
   openGraph: {
     title: title,
     description: description,
