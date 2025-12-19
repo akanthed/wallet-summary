@@ -25,8 +25,7 @@ import { Timeline } from "./timeline";
 import { Badges } from "./badges";
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
-import { WalletStoryPDF } from "./wallet-story-pdf";
-import { WalletStoryImage } from "./wallet-story-image";
+import { WalletStoryExport } from "./wallet-story-export";
 
 
 type WalletStoryProps = {
@@ -42,8 +41,8 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
     const [isDownloadingPng, setIsDownloadingPng] = useState(false);
 
-    const pdfRef = useRef<HTMLDivElement>(null);
-    const pngRef = useRef<HTMLDivElement>(null);
+    const exportRef = useRef<HTMLDivElement>(null);
+
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -59,104 +58,116 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         return `wallet-story-${personality}-${dateStr}.${extension}`;
     }
 
-    const handleDownloadPdf = async () => {
-        const node = pdfRef.current;
+    const generateImage = async (): Promise<string | null> => {
+        const node = exportRef.current;
         if (!node) {
-            toast({
-                title: "Error",
-                description: "Could not find PDF content to download.",
-                variant: "destructive"
-            });
-            return;
+          console.error("Export node not found");
+          return null;
         }
-        
-        setIsDownloadingPdf(true);
-        track('click_download_pdf', { address });
-
-        // Add a small delay to ensure fonts and styles are loaded
-        await new Promise(resolve => setTimeout(resolve, 300));
 
         try {
-            const dataUrl = await toPng(node, { 
-                cacheBust: true,
-                pixelRatio: 2,
-                backgroundColor: '#ffffff'
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            const dataUrl = await toPng(node, {
+              cacheBust: true,
+              pixelRatio: 2, // Use 2 for retina, 3 can be too large
+              backgroundColor: '#0b0b10',
+              // The library uses `fetch` so CORS is handled automatically for images.
             });
-            
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'px',
-                format: 'a4'
-            });
-            
-            const pdfWidth = pdf.internal.pageSize.getWidth();
-            const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = node.offsetWidth;
-            const imgHeight = node.offsetHeight;
-            const ratio = imgWidth / imgHeight;
-
-            const canvasWidth = pdfWidth - 24; 
-            const canvasHeight = canvasWidth / ratio;
-            
-            pdf.addImage(dataUrl, 'PNG', 12, 12, canvasWidth, canvasHeight);
-            pdf.save(generateFilename('pdf'));
-            
-            toast({
-                title: "Success!",
-                description: "PDF downloaded successfully.",
-            });
-
+            return dataUrl;
         } catch (error) {
-            console.error('Error generating PDF', error);
-            toast({
-                title: "Error",
-                description: "Failed to generate PDF. Please try again.",
-                variant: "destructive"
-            });
-        } finally {
-            setIsDownloadingPdf(false);
+            console.error('Error generating image data', error);
+            return null;
         }
-    };
-    
-    const handleDownloadPng = async () => {
-        const node = pngRef.current;
-        if (!node) {
-            toast({ title: "Error", description: "Could not find image content.", variant: "destructive" });
-            return;
-        }
+    }
 
+
+    const handleDownloadPng = async () => {
         setIsDownloadingPng(true);
         track('click_download_png', { address });
 
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        try {
-            const dataUrl = await toPng(node, {
-                pixelRatio: 2,
-                cacheBust: true,
-                backgroundColor: '#111115' // dark background
-            });
-
+        const dataUrl = await generateImage();
+        if (dataUrl) {
             const link = document.createElement('a');
             link.download = generateFilename('png');
             link.href = dataUrl;
             link.click();
-            
             toast({
                 title: "Success!",
                 description: "Image downloaded successfully.",
             });
-        } catch (error) {
-            console.error('Error generating PNG', error);
+        } else {
             toast({
                 title: "Error",
                 description: "Failed to generate image. Please try again.",
                 variant: "destructive"
             });
-        } finally {
-            setIsDownloadingPng(false);
         }
+        setIsDownloadingPng(false);
     }
+
+    const handleDownloadPdf = async () => {
+        setIsDownloadingPdf(true);
+        track('click_download_pdf', { address });
+        
+        const dataUrl = await generateImage();
+
+        if (dataUrl) {
+            try {
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'px',
+                    format: 'a4' // A4 size in px at 72 DPI is 595 x 842
+                });
+                
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                
+                const img = new Image();
+                img.src = dataUrl;
+                img.onload = () => {
+                    const imgWidth = img.width;
+                    const imgHeight = img.height;
+                    const ratio = imgWidth / imgHeight;
+                    
+                    let canvasWidth = pdfWidth - 24; // 12px margin on each side
+                    let canvasHeight = canvasWidth / ratio;
+                    
+                    if (canvasHeight > pdfHeight - 24) {
+                        canvasHeight = pdfHeight - 24;
+                        canvasWidth = canvasHeight * ratio;
+                    }
+
+                    const x = (pdfWidth - canvasWidth) / 2;
+                    const y = (pdfHeight - canvasHeight) / 2;
+
+                    pdf.addImage(dataUrl, 'PNG', x, y, canvasWidth, canvasHeight);
+                    pdf.save(generateFilename('pdf'));
+                    
+                    toast({
+                        title: "Success!",
+                        description: "PDF downloaded successfully.",
+                    });
+                }
+            } catch (error) {
+                console.error('Error generating PDF', error);
+                toast({
+                    title: "Error",
+                    description: "Failed to generate PDF. Please try again.",
+                    variant: "destructive"
+                });
+            }
+        } else {
+             toast({
+                title: "Error",
+                description: "Failed to generate image for PDF. Please try again.",
+                variant: "destructive"
+            });
+        }
+
+        setIsDownloadingPdf(false);
+    };
+    
 
 
     if (!personalityData) {
@@ -203,9 +214,8 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <>
-    {/* Hidden components for export */}
-    <WalletStoryPDF ref={pdfRef} result={result} address={address} />
-    <WalletStoryImage ref={pngRef} result={result} address={address} />
+    {/* Hidden component for export */}
+    <WalletStoryExport ref={exportRef} result={result} address={address} />
 
 
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
