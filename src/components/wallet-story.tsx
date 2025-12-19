@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin, Download, Image as ImageIcon } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin, Download, Image as ImageIcon, Square } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -25,7 +25,6 @@ import { Timeline } from "./timeline";
 import { Badges } from "./badges";
 import { WalletStoryExport } from "./wallet-story-export";
 import { WalletStoryShareCard } from "./wallet-story-share-card";
-import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -47,29 +46,6 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const exportRef = useRef<HTMLDivElement>(null);
     const shareCardRef = useRef<HTMLDivElement>(null);
 
-    /**
-     * Prepare element for capture by moving it into viewport
-     */
-    const prepareElementForCapture = async (element: HTMLElement): Promise<() => void> => {
-        const originalStyle = element.style.cssText;
-        
-        // Move element into viewport temporarily
-        element.style.position = 'fixed';
-        element.style.left = '0';
-        element.style.top = '0';
-        element.style.zIndex = '9999';
-        element.style.visibility = 'visible';
-        element.style.opacity = '1';
-        
-        // Wait for fonts and layout
-        await document.fonts.ready;
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Return cleanup function
-        return () => {
-            element.style.cssText = originalStyle;
-        };
-    };
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -103,47 +79,6 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         return true;
     };
 
-    const exportShareCard = async () => {
-        if (isExportingShareCard) return;
-        setIsExportingShareCard(true);
-        track('click_download_share_card', { address });
-
-        try {
-            const node = shareCardRef.current;
-            if (!node) throw new Error('Share card not mounted');
-
-            const cleanup = await prepareElementForCapture(node);
-
-            const dataUrl = await toPng(node, {
-                backgroundColor: '#0b0b10',
-                pixelRatio: 3,
-                cacheBust: true,
-                width: 1080,
-                height: 1080,
-            });
-
-            cleanup();
-
-            const link = document.createElement('a');
-            const name = personalityData?.personalityTitle?.toLowerCase().replace(/\s+/g, '-') || 'wallet-story';
-            link.download = `wallet-story-${name}-share.png`;
-            link.href = dataUrl;
-            link.click();
-            link.remove();
-
-            toast({ title: 'Share card downloaded successfully!' });
-        } catch (err) {
-            console.error('Share card export failed', err);
-            toast({ 
-                title: 'Export failed', 
-                description: err instanceof Error ? err.message : 'Failed to generate share card',
-                variant: 'destructive' 
-            });
-        } finally {
-            setIsExportingShareCard(false);
-        }
-    }
-
     /**
      * Export as PNG using html2canvas
      * Dark theme matching UI
@@ -154,10 +89,21 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         track('click_download_png', { address });
 
         try {
-            const node = exportRef.current;
-            if (!node) throw new Error('Export component not ready');
+            if (!verifyExportReady()) {
+                throw new Error('Export component not ready');
+            }
 
-            const cleanup = await prepareElementForCapture(node);
+            const node = exportRef.current!;
+            
+            // Temporarily move element into view for capture
+            const originalStyle = node.style.cssText;
+            node.style.position = 'absolute';
+            node.style.left = '0';
+            node.style.top = '0';
+            node.style.zIndex = '9999';
+            
+            // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 100));
 
             const canvas = await html2canvas(node, {
                 backgroundColor: '#09090b',
@@ -166,14 +112,24 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 logging: false,
                 width: 1080,
                 height: node.scrollHeight,
+                onclone: (clonedDoc) => {
+                    const clonedNode = clonedDoc.getElementById('wallet-export-container');
+                    if (clonedNode) {
+                        clonedNode.style.position = 'static';
+                        clonedNode.style.left = '0';
+                        clonedNode.style.top = '0';
+                    }
+                }
             });
 
-            cleanup();
+            // Restore original position
+            node.style.cssText = originalStyle;
 
-            const imgData = canvas.toDataURL('image/png', 1.0);
+            // Convert to PNG and download
+            const dataUrl = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
             link.download = generateFilename('png');
-            link.href = imgData;
+            link.href = dataUrl;
             link.click();
             link.remove();
 
@@ -203,10 +159,21 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         track('click_download_pdf', { address });
 
         try {
-            const node = exportRef.current;
-            if (!node) throw new Error('Export component not ready');
+            if (!verifyExportReady()) {
+                throw new Error('Export component not ready');
+            }
 
-            const cleanup = await prepareElementForCapture(node);
+            const node = exportRef.current!;
+            
+            // Temporarily move element into view for capture
+            const originalStyle = node.style.cssText;
+            node.style.position = 'absolute';
+            node.style.left = '0';
+            node.style.top = '0';
+            node.style.zIndex = '9999';
+            
+            // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 100));
 
             const canvas = await html2canvas(node, {
                 backgroundColor: '#09090b',
@@ -215,9 +182,18 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 logging: false,
                 width: 1080,
                 height: node.scrollHeight,
+                onclone: (clonedDoc: Document) => {
+                    const clonedNode = clonedDoc.getElementById('wallet-export-container');
+                    if (clonedNode) {
+                        clonedNode.style.position = 'static';
+                        clonedNode.style.left = '0';
+                        clonedNode.style.top = '0';
+                    }
+                }
             });
 
-            cleanup();
+            // Restore original position
+            node.style.cssText = originalStyle;
 
             const imgData = canvas.toDataURL('image/png', 1.0);
 
@@ -281,6 +257,76 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             setIsExportingPdf(false);
         }
     };
+
+    /**
+     * Export square Share Card as PNG (1080x1080)
+     * For social media sharing (X, LinkedIn, WhatsApp)
+     */
+    const exportShareCard = async () => {
+        if (isExportingShareCard) return;
+        setIsExportingShareCard(true);
+        track('click_share_card', { address });
+
+        try {
+            const node = shareCardRef.current;
+            if (!node) {
+                throw new Error('Share card component not ready');
+            }
+
+            // Temporarily move element into view for capture
+            const originalStyle = node.style.cssText;
+            node.style.position = 'absolute';
+            node.style.left = '0';
+            node.style.top = '0';
+            node.style.zIndex = '9999';
+
+            // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            const canvas = await html2canvas(node, {
+                backgroundColor: '#0b0b10',
+                scale: 3,
+                useCORS: true,
+                logging: false,
+                width: 1080,
+                height: 1080,
+                onclone: (clonedDoc: Document) => {
+                    const clonedNode = clonedDoc.getElementById('wallet-share-card');
+                    if (clonedNode) {
+                        clonedNode.style.position = 'static';
+                        clonedNode.style.left = '0';
+                        clonedNode.style.top = '0';
+                    }
+                }
+            });
+
+            // Restore original position
+            node.style.cssText = originalStyle;
+
+            // Convert to PNG and download
+            const dataUrl = canvas.toDataURL('image/png', 1.0);
+            const link = document.createElement('a');
+            const personality = personalityData.personalityTitle.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+            link.download = `wallet-story-${personality}.png`;
+            link.href = dataUrl;
+            link.click();
+            link.remove();
+
+            toast({
+                title: "Share Card Ready!",
+                description: "Your social card has been downloaded.",
+            });
+        } catch (error) {
+            console.error('[Share Card Export Error]', error);
+            toast({
+                title: "Export Failed",
+                description: error instanceof Error ? error.message : "Failed to generate share card. Please try again.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsExportingShareCard(false);
+        }
+    };
     
 
 
@@ -328,11 +374,11 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <>
-    {/* Hidden components for export - positioned off-screen until capture */}
-    <div style={{ position: 'fixed', left: '-9999px', top: 0, visibility: 'hidden' }}>
-      <WalletStoryExport ref={exportRef} result={result} address={address} />
-      <WalletStoryShareCard ref={shareCardRef} result={result} address={address} />
-    </div>
+    {/* Hidden component for full export */}
+    <WalletStoryExport ref={exportRef} result={result} address={address} />
+    {/* Hidden component for square share card */}
+    <WalletStoryShareCard ref={shareCardRef} result={result} address={address} />
+
 
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <TooltipProvider>
@@ -471,6 +517,22 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 <span>Share on LinkedIn</span>
                             </DropdownMenuItem>
                              <Separator className="my-1" />
+                            <DropdownMenuItem onClick={exportShareCard} disabled={isExportingShareCard}>
+                                {isExportingShareCard ? (
+                                    <div className="flex items-center">
+                                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Generating Card...
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Square className="mr-2 h-4 w-4" />
+                                        <span>Share Card (Square)</span>
+                                    </>
+                                )}
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={exportAsPNG} disabled={isExportingPng}>
                                 {isExportingPng ? (
                                     <div className="flex items-center">
@@ -483,26 +545,11 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 ) : (
                                     <>
                                         <ImageIcon className="mr-2 h-4 w-4" />
-                                        <span>Download Image</span>
+                                        <span>Full Report Image</span>
                                     </>
                                 )}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={exportShareCard} disabled={isExportingShareCard}>
-                                {isExportingShareCard ? (
-                                    <div className="flex items-center">
-                                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                        Generating Share Card...
-                                    </div>
-                                ) : (
-                                    <>
-                                        <ImageIcon className="mr-2 h-4 w-4" />
-                                        <span>Share Card</span>
-                                    </>
-                                )}
-                            </DropdownMenuItem>
+                            {/* PDF download removed */}
 
                         </DropdownMenuContent>
                     </DropdownMenu>

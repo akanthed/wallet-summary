@@ -33,7 +33,10 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
           padding: '48px',
           fontFamily: 'Arial, Helvetica, sans-serif',
           boxSizing: 'border-box',
-          position: 'relative',
+          position: 'fixed',
+          left: '-9999px',
+          top: '0',
+          zIndex: -1,
         }}
       >
         {/* Header */}
