@@ -24,7 +24,7 @@ import { track } from "@/lib/analytics";
 import { Timeline } from "./timeline";
 import { Badges } from "./badges";
 import { WalletStoryExport } from "./wallet-story-export";
-import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
 
@@ -67,10 +67,6 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             console.error('[Export] Export ref not found');
             return false;
         }
-        if (node.offsetHeight === 0) {
-            console.error('[Export] Export container has zero height');
-            return false;
-        }
         const textContent = node.innerText.trim();
         if (!textContent || textContent.length === 0) {
             console.error('[Export] Export container has no text content');
@@ -81,8 +77,8 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     };
 
     /**
-     * Export as PNG using html-to-image
-     * Uses white background, explicit dimensions
+     * Export as PNG using html2canvas
+     * Dark theme matching UI
      */
     const exportAsPNG = async () => {
         if (isExportingPng) return;
@@ -96,23 +92,38 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
             const node = exportRef.current!;
             
-            // Wait for fonts and render cycle to complete
-            await (document.fonts as any).ready;
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Temporarily move element into view for capture
+            const originalStyle = node.style.cssText;
+            node.style.position = 'absolute';
+            node.style.left = '0';
+            node.style.top = '0';
+            node.style.zIndex = '9999';
+            
+            // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 100));
 
-            const dataUrl = await toPng(node, {
-                backgroundColor: '#ffffff',
+            const canvas = await html2canvas(node, {
+                backgroundColor: '#09090b',
+                scale: 2,
+                useCORS: true,
+                logging: false,
                 width: 1080,
                 height: node.scrollHeight,
-                pixelRatio: 3,
-                cacheBust: true,
-                skipFonts: true,
-                style: {
-                    color: '#111111',
-                },
+                onclone: (clonedDoc) => {
+                    const clonedNode = clonedDoc.getElementById('wallet-export-container');
+                    if (clonedNode) {
+                        clonedNode.style.position = 'static';
+                        clonedNode.style.left = '0';
+                        clonedNode.style.top = '0';
+                    }
+                }
             });
 
-            // Trigger download
+            // Restore original position
+            node.style.cssText = originalStyle;
+
+            // Convert to PNG and download
+            const dataUrl = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
             link.download = generateFilename('png');
             link.href = dataUrl;
@@ -136,8 +147,8 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     };
 
     /**
-     * Export as PDF
-     * Generates PNG first, then converts to PDF
+     * Export as PDF using html2canvas + jsPDF
+     * Dark theme matching UI
      */
     const exportAsPDF = async () => {
         if (isExportingPdf) return;
@@ -151,24 +162,39 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
             const node = exportRef.current!;
             
-            // Wait for fonts and render cycle to complete
-            await (document.fonts as any).ready;
-            await new Promise(resolve => setTimeout(resolve, 300));
+            // Temporarily move element into view for capture
+            const originalStyle = node.style.cssText;
+            node.style.position = 'absolute';
+            node.style.left = '0';
+            node.style.top = '0';
+            node.style.zIndex = '9999';
+            
+            // Wait for render
+            await new Promise(resolve => setTimeout(resolve, 100));
 
-            // Generate PNG first
-            const dataUrl = await toPng(node, {
-                backgroundColor: '#ffffff',
+            const canvas = await html2canvas(node, {
+                backgroundColor: '#09090b',
+                scale: 2,
+                useCORS: true,
+                logging: false,
                 width: 1080,
                 height: node.scrollHeight,
-                pixelRatio: 3,
-                cacheBust: true,
-                skipFonts: true,
-                style: {
-                    color: '#111111',
-                },
+                onclone: (clonedDoc: Document) => {
+                    const clonedNode = clonedDoc.getElementById('wallet-export-container');
+                    if (clonedNode) {
+                        clonedNode.style.position = 'static';
+                        clonedNode.style.left = '0';
+                        clonedNode.style.top = '0';
+                    }
+                }
             });
 
-            // Create PDF from PNG
+            // Restore original position
+            node.style.cssText = originalStyle;
+
+            const imgData = canvas.toDataURL('image/png', 1.0);
+
+            // Create PDF
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'px',
@@ -177,43 +203,20 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
+            
+            const imgWidth = canvas.width;
+            const imgHeight = canvas.height;
 
-            // Load image and calculate dimensions
-            await new Promise<void>((resolve, reject) => {
-                const img = new Image();
-                
-                img.onload = () => {
-                    try {
-                        const imgWidth = img.naturalWidth;
-                        const imgHeight = img.naturalHeight;
+            // Scale to fit page width
+            const margin = 20;
+            const availableWidth = pageWidth - (margin * 2);
+            const scale = availableWidth / imgWidth;
+            
+            const scaledWidth = imgWidth * scale;
+            const scaledHeight = imgHeight * scale;
 
-                        // Scale to fit width with margins
-                        const margin = 20;
-                        const availableWidth = pageWidth - (margin * 2);
-                        const scale = availableWidth / imgWidth;
-                        
-                        const scaledWidth = imgWidth * scale;
-                        const scaledHeight = imgHeight * scale;
-
-                        // Center horizontally, start from top with margin
-                        const x = margin;
-                        const y = margin;
-
-                        pdf.addImage(dataUrl, 'PNG', x, y, scaledWidth, scaledHeight);
-                        pdf.save(generateFilename('pdf'));
-                        resolve();
-                    } catch (err) {
-                        reject(err);
-                    }
-                };
-
-                img.onerror = () => reject(new Error('Failed to load image for PDF'));
-                
-                // Timeout after 10 seconds
-                setTimeout(() => reject(new Error('PDF generation timeout')), 10000);
-                
-                img.src = dataUrl;
-            });
+            pdf.addImage(imgData, 'PNG', margin, margin, scaledWidth, scaledHeight);
+            pdf.save(generateFilename('pdf'));
 
             toast({
                 title: "Success!",

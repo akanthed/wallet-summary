@@ -7,13 +7,13 @@ type WalletStoryExportProps = {
 };
 
 /**
- * LIGHT THEME EXPORT COMPONENT
+ * DARK THEME EXPORT COMPONENT - Matches main UI
  * 
  * This component is designed ONLY for PNG/PDF export.
  * - Uses explicit inline styles (NO Tailwind, NO CSS variables)
- * - White background with dark text for reliable rendering
+ * - Dark background matching app UI
  * - Fixed dimensions for consistent output
- * - No animations, gradients, or opacity tricks
+ * - Rendered in a portal container for reliable capture
  */
 export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportProps>(
   ({ result, address }, ref) => {
@@ -21,203 +21,225 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
     
     const truncatedAddress = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
 
-    // Inline styles only - no Tailwind classes
-    const styles = {
-      container: {
-        position: 'absolute' as const,
-        top: '-9999px',
-        left: '0',
-        width: '1080px',
-        minHeight: '1350px',
-        backgroundColor: '#ffffff',
-        color: '#111111',
-        padding: '48px',
-        fontFamily: 'Arial, Helvetica, sans-serif',
-        boxSizing: 'border-box' as const,
-        visibility: 'visible' as const,
-        opacity: 1,
-      },
-      header: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '40px',
-        paddingBottom: '20px',
-        borderBottom: '2px solid #e5e7eb',
-      },
-      logo: {
-        fontSize: '24px',
-        fontWeight: 700,
-        color: '#4f46e5',
-      },
-      addressText: {
-        fontSize: '16px',
-        fontFamily: 'monospace',
-        color: '#6b7280',
-      },
-      title: {
-        fontSize: '48px',
-        fontWeight: 700,
-        color: '#111111',
-        marginBottom: '16px',
-        textAlign: 'center' as const,
-        lineHeight: 1.2,
-      },
-      summary: {
-        fontSize: '20px',
-        color: '#444444',
-        textAlign: 'center' as const,
-        marginBottom: '32px',
-        lineHeight: 1.5,
-      },
-      sectionTitle: {
-        fontSize: '18px',
-        fontWeight: 600,
-        color: '#111111',
-        marginBottom: '16px',
-        paddingBottom: '8px',
-        borderBottom: '1px solid #e5e7eb',
-      },
-      traitsContainer: {
-        display: 'flex',
-        flexWrap: 'wrap' as const,
-        gap: '12px',
-        justifyContent: 'center',
-        marginBottom: '32px',
-      },
-      trait: {
-        backgroundColor: '#f3f4f6',
-        color: '#333333',
-        padding: '8px 16px',
-        borderRadius: '20px',
-        fontSize: '14px',
-        fontWeight: 500,
-        border: '1px solid #e5e7eb',
-      },
-      storySection: {
-        marginBottom: '32px',
-      },
-      storyText: {
-        fontSize: '16px',
-        color: '#333333',
-        lineHeight: 1.8,
-        whiteSpace: 'pre-wrap' as const,
-      },
-      statsGrid: {
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        gap: '16px',
-        marginBottom: '32px',
-      },
-      statCard: {
-        backgroundColor: '#f9fafb',
-        border: '1px solid #e5e7eb',
-        borderRadius: '12px',
-        padding: '20px',
-      },
-      statLabel: {
-        fontSize: '14px',
-        color: '#666666',
-        marginBottom: '4px',
-      },
-      statValue: {
-        fontSize: '24px',
-        fontWeight: 600,
-        color: '#111111',
-      },
-      badgesSection: {
-        marginBottom: '32px',
-      },
-      badgeItem: {
-        padding: '12px 0',
-        borderBottom: '1px solid #f3f4f6',
-      },
-      badgeName: {
-        fontWeight: 600,
-        color: '#2563eb',
-      },
-      badgeRarity: {
-        fontSize: '12px',
-        color: '#666666',
-        marginLeft: '8px',
-      },
-      badgeDescription: {
-        fontSize: '14px',
-        color: '#555555',
-        marginTop: '4px',
-      },
-      footer: {
-        marginTop: 'auto',
-        paddingTop: '24px',
-        borderTop: '1px solid #e5e7eb',
-        textAlign: 'center' as const,
-        fontSize: '14px',
-        color: '#888888',
-      },
-    };
-
     return (
-      <div ref={ref} style={styles.container}>
+      <div
+        ref={ref}
+        id="wallet-export-container"
+        style={{
+          width: '1080px',
+          minHeight: '1400px',
+          backgroundColor: '#09090b',
+          color: '#fafafa',
+          padding: '48px',
+          fontFamily: 'Arial, Helvetica, sans-serif',
+          boxSizing: 'border-box',
+          position: 'fixed',
+          left: '-9999px',
+          top: '0',
+          zIndex: -1,
+        }}
+      >
         {/* Header */}
-        <div style={styles.header}>
-          <div style={styles.logo}>🔮 Wallet Story</div>
-          <div style={styles.addressText}>{truncatedAddress}</div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '40px',
+          paddingBottom: '20px',
+          borderBottom: '1px solid #27272a',
+        }}>
+          <div style={{
+            fontSize: '28px',
+            fontWeight: 700,
+            color: '#a78bfa',
+          }}>
+            🔮 Wallet Story
+          </div>
+          <div style={{
+            fontSize: '18px',
+            fontFamily: 'Consolas, Monaco, monospace',
+            color: '#71717a',
+          }}>
+            {truncatedAddress}
+          </div>
         </div>
 
-        {/* Title & Summary */}
-        <h1 style={styles.title}>{personalityData.personalityTitle}</h1>
-        <p style={styles.summary}>{personalityData.oneLineSummary}</p>
+        {/* Title */}
+        <h1 style={{
+          fontSize: '56px',
+          fontWeight: 700,
+          color: '#fafafa',
+          marginBottom: '16px',
+          textAlign: 'center',
+          lineHeight: 1.2,
+        }}>
+          {personalityData.personalityTitle}
+        </h1>
+
+        {/* Summary */}
+        <p style={{
+          fontSize: '22px',
+          color: '#a1a1aa',
+          textAlign: 'center',
+          marginBottom: '40px',
+          lineHeight: 1.5,
+        }}>
+          {personalityData.oneLineSummary}
+        </p>
 
         {/* Traits */}
-        <div style={styles.traitsContainer}>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          justifyContent: 'center',
+          marginBottom: '48px',
+        }}>
           {personalityData.traits.map((trait, index) => (
-            <span key={index} style={styles.trait}>{trait}</span>
+            <span
+              key={index}
+              style={{
+                backgroundColor: '#27272a',
+                color: '#e4e4e7',
+                padding: '10px 20px',
+                borderRadius: '24px',
+                fontSize: '16px',
+                fontWeight: 500,
+                border: '1px solid #3f3f46',
+              }}
+            >
+              {trait}
+            </span>
           ))}
         </div>
 
-        {/* Personality Story */}
-        <div style={styles.storySection}>
-          <h2 style={styles.sectionTitle}>Personality Story</h2>
-          <p style={styles.storyText}>{personalityData.personalityStory}</p>
+        {/* Personality Story Section */}
+        <div style={{ marginBottom: '48px' }}>
+          <h2 style={{
+            fontSize: '20px',
+            fontWeight: 600,
+            color: '#fafafa',
+            marginBottom: '16px',
+            paddingBottom: '12px',
+            borderBottom: '1px solid #27272a',
+          }}>
+            ✨ Personality Story
+          </h2>
+          <p style={{
+            fontSize: '17px',
+            color: '#d4d4d8',
+            lineHeight: 1.9,
+            whiteSpace: 'pre-wrap',
+          }}>
+            {personalityData.personalityStory}
+          </p>
         </div>
 
         {/* Stats Grid */}
-        <div style={styles.statsGrid}>
-          <div style={styles.statCard}>
-            <div style={styles.statLabel}>Wallet Age</div>
-            <div style={styles.statValue}>{stats.walletAge} days</div>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '16px',
+          marginBottom: '48px',
+        }}>
+          <div style={{
+            backgroundColor: '#18181b',
+            border: '1px solid #27272a',
+            borderRadius: '12px',
+            padding: '24px',
+          }}>
+            <div style={{ fontSize: '14px', color: '#71717a', marginBottom: '8px' }}>
+              📅 Wallet Age
+            </div>
+            <div style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa' }}>
+              {stats.walletAge} days
+            </div>
           </div>
-          <div style={styles.statCard}>
-            <div style={styles.statLabel}>Total Transactions</div>
-            <div style={styles.statValue}>{stats.txCount.toLocaleString()}</div>
+          <div style={{
+            backgroundColor: '#18181b',
+            border: '1px solid #27272a',
+            borderRadius: '12px',
+            padding: '24px',
+          }}>
+            <div style={{ fontSize: '14px', color: '#71717a', marginBottom: '8px' }}>
+              🔄 Total Transactions
+            </div>
+            <div style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa' }}>
+              {stats.txCount.toLocaleString()}
+            </div>
           </div>
-          <div style={styles.statCard}>
-            <div style={styles.statLabel}>ETH Balance</div>
-            <div style={styles.statValue}>{parseFloat(stats.balance).toFixed(4)} ETH</div>
+          <div style={{
+            backgroundColor: '#18181b',
+            border: '1px solid #27272a',
+            borderRadius: '12px',
+            padding: '24px',
+          }}>
+            <div style={{ fontSize: '14px', color: '#71717a', marginBottom: '8px' }}>
+              💰 ETH Balance
+            </div>
+            <div style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa' }}>
+              {parseFloat(stats.balance).toFixed(4)} ETH
+            </div>
           </div>
-          <div style={styles.statCard}>
-            <div style={styles.statLabel}>Activity Status</div>
-            <div style={styles.statValue}>{stats.activityStatus}</div>
+          <div style={{
+            backgroundColor: '#18181b',
+            border: '1px solid #27272a',
+            borderRadius: '12px',
+            padding: '24px',
+          }}>
+            <div style={{ fontSize: '14px', color: '#71717a', marginBottom: '8px' }}>
+              ⚡ Activity Status
+            </div>
+            <div style={{ fontSize: '28px', fontWeight: 600, color: '#fafafa' }}>
+              {stats.activityStatus}
+            </div>
           </div>
         </div>
 
         {/* Achievements */}
         {badges && badges.length > 0 && (
-          <div style={styles.badgesSection}>
-            <h2 style={styles.sectionTitle}>Achievements ({badges.length})</h2>
+          <div style={{ marginBottom: '48px' }}>
+            <h2 style={{
+              fontSize: '20px',
+              fontWeight: 600,
+              color: '#fafafa',
+              marginBottom: '16px',
+              paddingBottom: '12px',
+              borderBottom: '1px solid #27272a',
+            }}>
+              🏆 Achievements ({badges.length})
+            </h2>
             {badges.map((badge) => (
-              <div key={badge.id} style={styles.badgeItem}>
-                <span style={styles.badgeName}>{badge.name}</span>
-                <span style={styles.badgeRarity}>({badge.rarity})</span>
-                <div style={styles.badgeDescription}>{badge.description}</div>
+              <div
+                key={badge.id}
+                style={{
+                  padding: '14px 0',
+                  borderBottom: '1px solid #27272a',
+                }}
+              >
+                <span style={{ fontWeight: 600, color: '#a78bfa', fontSize: '16px' }}>
+                  {badge.name}
+                </span>
+                <span style={{ fontSize: '13px', color: '#71717a', marginLeft: '10px' }}>
+                  ({badge.rarity})
+                </span>
+                <div style={{ fontSize: '15px', color: '#a1a1aa', marginTop: '6px' }}>
+                  {badge.description}
+                </div>
               </div>
             ))}
           </div>
         )}
 
         {/* Footer */}
-        <div style={styles.footer}>
-          Generated by Wallet Story Explorer
+        <div style={{
+          paddingTop: '24px',
+          borderTop: '1px solid #27272a',
+          textAlign: 'center',
+          fontSize: '15px',
+          color: '#52525b',
+        }}>
+          Generated by Wallet Story Explorer • {new Date().toLocaleDateString()}
         </div>
       </div>
     );
