@@ -47,6 +47,29 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const exportRef = useRef<HTMLDivElement>(null);
     const shareCardRef = useRef<HTMLDivElement>(null);
 
+    /**
+     * Prepare element for capture by moving it into viewport
+     */
+    const prepareElementForCapture = async (element: HTMLElement): Promise<() => void> => {
+        const originalStyle = element.style.cssText;
+        
+        // Move element into viewport temporarily
+        element.style.position = 'fixed';
+        element.style.left = '0';
+        element.style.top = '0';
+        element.style.zIndex = '9999';
+        element.style.visibility = 'visible';
+        element.style.opacity = '1';
+        
+        // Wait for fonts and layout
+        await document.fonts.ready;
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Return cleanup function
+        return () => {
+            element.style.cssText = originalStyle;
+        };
+    };
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -83,33 +106,39 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const exportShareCard = async () => {
         if (isExportingShareCard) return;
         setIsExportingShareCard(true);
+        track('click_download_share_card', { address });
 
         try {
-            // verify share card is present
             const node = shareCardRef.current;
             if (!node) throw new Error('Share card not mounted');
 
-            // wait for fonts/render
-            await (document.fonts as any).ready;
-            await new Promise(r => setTimeout(r, 300));
+            const cleanup = await prepareElementForCapture(node);
 
             const dataUrl = await toPng(node, {
                 backgroundColor: '#0b0b10',
                 pixelRatio: 3,
                 cacheBust: true,
+                width: 1080,
+                height: 1080,
             });
+
+            cleanup();
 
             const link = document.createElement('a');
             const name = personalityData?.personalityTitle?.toLowerCase().replace(/\s+/g, '-') || 'wallet-story';
-            link.download = `wallet-story-${name}.png`;
+            link.download = `wallet-story-${name}-share.png`;
             link.href = dataUrl;
             link.click();
             link.remove();
 
-            toast({ title: 'Share card downloaded' });
+            toast({ title: 'Share card downloaded successfully!' });
         } catch (err) {
             console.error('Share card export failed', err);
-            toast({ title: 'Export failed', variant: 'destructive' });
+            toast({ 
+                title: 'Export failed', 
+                description: err instanceof Error ? err.message : 'Failed to generate share card',
+                variant: 'destructive' 
+            });
         } finally {
             setIsExportingShareCard(false);
         }
@@ -125,21 +154,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         track('click_download_png', { address });
 
         try {
-            if (!verifyExportReady()) {
-                throw new Error('Export component not ready');
-            }
+            const node = exportRef.current;
+            if (!node) throw new Error('Export component not ready');
 
-            const node = exportRef.current!;
-            
-            // Temporarily move element into view for capture
-            const originalStyle = node.style.cssText;
-            node.style.position = 'absolute';
-            node.style.left = '0';
-            node.style.top = '0';
-            node.style.zIndex = '9999';
-            
-            // Wait for render
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const cleanup = await prepareElementForCapture(node);
 
             const canvas = await html2canvas(node, {
                 backgroundColor: '#09090b',
@@ -148,24 +166,14 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 logging: false,
                 width: 1080,
                 height: node.scrollHeight,
-                onclone: (clonedDoc) => {
-                    const clonedNode = clonedDoc.getElementById('wallet-export-container');
-                    if (clonedNode) {
-                        clonedNode.style.position = 'static';
-                        clonedNode.style.left = '0';
-                        clonedNode.style.top = '0';
-                    }
-                }
             });
 
-            // Restore original position
-            node.style.cssText = originalStyle;
+            cleanup();
 
-            // Convert to PNG and download
-            const dataUrl = canvas.toDataURL('image/png', 1.0);
+            const imgData = canvas.toDataURL('image/png', 1.0);
             const link = document.createElement('a');
             link.download = generateFilename('png');
-            link.href = dataUrl;
+            link.href = imgData;
             link.click();
             link.remove();
 
@@ -195,21 +203,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         track('click_download_pdf', { address });
 
         try {
-            if (!verifyExportReady()) {
-                throw new Error('Export component not ready');
-            }
+            const node = exportRef.current;
+            if (!node) throw new Error('Export component not ready');
 
-            const node = exportRef.current!;
-            
-            // Temporarily move element into view for capture
-            const originalStyle = node.style.cssText;
-            node.style.position = 'absolute';
-            node.style.left = '0';
-            node.style.top = '0';
-            node.style.zIndex = '9999';
-            
-            // Wait for render
-            await new Promise(resolve => setTimeout(resolve, 100));
+            const cleanup = await prepareElementForCapture(node);
 
             const canvas = await html2canvas(node, {
                 backgroundColor: '#09090b',
@@ -218,18 +215,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 logging: false,
                 width: 1080,
                 height: node.scrollHeight,
-                onclone: (clonedDoc: Document) => {
-                    const clonedNode = clonedDoc.getElementById('wallet-export-container');
-                    if (clonedNode) {
-                        clonedNode.style.position = 'static';
-                        clonedNode.style.left = '0';
-                        clonedNode.style.top = '0';
-                    }
-                }
             });
 
-            // Restore original position
-            node.style.cssText = originalStyle;
+            cleanup();
 
             const imgData = canvas.toDataURL('image/png', 1.0);
 
@@ -340,10 +328,11 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <>
-    {/* Hidden components for export */}
-    <WalletStoryExport ref={exportRef} result={result} address={address} />
-    <WalletStoryShareCard ref={shareCardRef} result={result} address={address} />
-
+    {/* Hidden components for export - positioned off-screen until capture */}
+    <div style={{ position: 'fixed', left: '-9999px', top: 0, visibility: 'hidden' }}>
+      <WalletStoryExport ref={exportRef} result={result} address={address} />
+      <WalletStoryShareCard ref={shareCardRef} result={result} address={address} />
+    </div>
 
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
         <TooltipProvider>

@@ -13,9 +13,6 @@ export const WalletStoryShareCard = forwardRef<HTMLDivElement, Props>(({ result,
   const traits = personalityData?.traits?.slice(0, 3) || [];
 
   const containerStyle: React.CSSProperties = {
-    position: 'absolute',
-    top: '-9999px',
-    left: 0,
     width: '1080px',
     height: '1080px',
     backgroundColor: '#0b0b10',
@@ -23,7 +20,7 @@ export const WalletStoryShareCard = forwardRef<HTMLDivElement, Props>(({ result,
     padding: '48px',
     boxSizing: 'border-box',
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    visibility: 'visible',
+    position: 'relative',
   };
 
   const headerStyle: React.CSSProperties = {
