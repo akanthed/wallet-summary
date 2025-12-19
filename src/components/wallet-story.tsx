@@ -99,6 +99,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 height: node.scrollHeight,
                 pixelRatio: 3,
                 cacheBust: true,
+                skipFonts: true, // Skip external fonts to avoid CORS errors
             });
 
             // Trigger download
@@ -150,6 +151,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 height: node.scrollHeight,
                 pixelRatio: 3,
                 cacheBust: true,
+                skipFonts: true, // Skip external fonts to avoid CORS errors
             });
 
             // Create PDF from PNG
