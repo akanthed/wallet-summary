@@ -26,14 +26,15 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
         ref={ref}
         className="font-body"
         style={{
-          position: 'absolute',
-          top: '-9999px',
-          left: '0px',
+          position: 'fixed',
+          top: '0',
+          left: '-9999px',
           width: CARD_WIDTH,
           minHeight: 1350,
           backgroundColor: "#0b0b10",
           color: "#E5E7EB",
           fontFamily: "'Space Grotesk', sans-serif",
+          zIndex: -1,
         }}
       >
         <div className="h-full w-full flex flex-col p-16 justify-between gap-12">

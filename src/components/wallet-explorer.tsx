@@ -227,12 +227,13 @@ export function WalletExplorer() {
                             </button>
                         </p>
                     )}
-                     <Button variant="link" asChild>
+                     {/* Temporarily hidden - Compare feature under development */}
+                     {/* <Button variant="link" asChild>
                         <Link href="/compare">
                             <Users className="mr-2 h-4 w-4" />
                             Compare Wallets
                         </Link>
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
         </div>

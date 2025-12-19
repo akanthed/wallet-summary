@@ -66,13 +66,19 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         }
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait longer for all fonts and content to load
+            await new Promise(resolve => setTimeout(resolve, 1000));
             
             const dataUrl = await toPng(node, {
               cacheBust: true,
-              pixelRatio: 2, // Use 2 for retina, 3 can be too large
+              pixelRatio: 2,
               backgroundColor: '#0b0b10',
-              // The library uses `fetch` so CORS is handled automatically for images.
+              width: 1080,
+              height: node.scrollHeight,
+              style: {
+                transform: 'scale(1)',
+                transformOrigin: 'top left',
+              }
             });
             return dataUrl;
         } catch (error) {
@@ -126,8 +132,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
             const pdf = new jsPDF({
                 orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
+                unit: 'px',
+                format: 'a4',
+                hotfixes: ['px_scaling']
             });
             
             const pageWidth = pdf.internal.pageSize.getWidth();
@@ -143,21 +150,23 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                         clearTimeout(timeoutId);
                         const imgWidth = img.naturalWidth;
                         const imgHeight = img.naturalHeight;
-                        const ratio = imgHeight / imgWidth;
                         
-                        let canvasWidth = pageWidth - 10; // 5mm margin on each side
-                        let canvasHeight = canvasWidth * ratio;
+                        // Calculate scaling to fit page with margins
+                        const margin = 20;
+                        const availableWidth = pageWidth - (margin * 2);
+                        const availableHeight = pageHeight - (margin * 2);
                         
-                        // If image is taller than page, scale it down
-                        if (canvasHeight > pageHeight - 10) {
-                            canvasHeight = pageHeight - 10;
-                            canvasWidth = canvasHeight / ratio;
-                        }
-
-                        const x = (pageWidth - canvasWidth) / 2;
-                        const y = (pageHeight - canvasHeight) / 2;
+                        const widthRatio = availableWidth / imgWidth;
+                        const heightRatio = availableHeight / imgHeight;
+                        const scale = Math.min(widthRatio, heightRatio);
                         
-                        pdf.addImage(dataUrl, 'PNG', x, y, canvasWidth, canvasHeight);
+                        const scaledWidth = imgWidth * scale;
+                        const scaledHeight = imgHeight * scale;
+                        
+                        const x = (pageWidth - scaledWidth) / 2;
+                        const y = (pageHeight - scaledHeight) / 2;
+                        
+                        pdf.addImage(dataUrl, 'PNG', x, y, scaledWidth, scaledHeight, undefined, 'FAST');
                         pdf.save(generateFilename('pdf'));
                         resolve();
                     } catch (error) {
