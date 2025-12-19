@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { AnalysisResult, ImageFormat } from "@/lib/types";
 import { StatsCard } from "./stats-card";
-import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin, Download } from "lucide-react";
+import { CalendarDays, Repeat, Wallet, Activity, Copy, Share2, User, Pencil, Search, Link as LinkIcon, ChevronDown, Twitter, Linkedin, Download, Image as ImageIcon } from "lucide-react";
 import { Separator } from "./ui/separator";
 import { TooltipProvider } from "./ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ import { Badges } from "./badges";
 import { toPng } from 'html-to-image';
 import jsPDF from 'jspdf';
 import { WalletStoryPDF } from "./wallet-story-pdf";
+import { WalletStoryImage } from "./wallet-story-image";
 
 
 type WalletStoryProps = {
@@ -39,8 +40,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const { personalityData, timelineEvents, badges } = result;
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
     const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+    const [isDownloadingPng, setIsDownloadingPng] = useState(false);
 
     const pdfRef = useRef<HTMLDivElement>(null);
+    const pngRef = useRef<HTMLDivElement>(null);
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
         navigator.clipboard.writeText(text);
@@ -76,16 +79,14 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         try {
             const dataUrl = await toPng(node, { 
                 cacheBust: true,
-                pixelRatio: 2, // Use scale: 2 for better quality
+                pixelRatio: 2,
                 backgroundColor: '#ffffff'
             });
             
-            // A4 page size in pixels at 96 DPI is 794x1123. We use jsPDF's internal scaling.
-            // A4 dimensions in points: 595.28 x 841.89
             const pdf = new jsPDF({
                 orientation: 'portrait',
                 unit: 'px',
-                format: 'a4' // A4 size
+                format: 'a4'
             });
             
             const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -94,7 +95,7 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             const imgHeight = node.offsetHeight;
             const ratio = imgWidth / imgHeight;
 
-            const canvasWidth = pdfWidth - 24; // 12px margin on each side
+            const canvasWidth = pdfWidth - 24; 
             const canvasHeight = canvasWidth / ratio;
             
             pdf.addImage(dataUrl, 'PNG', 12, 12, canvasWidth, canvasHeight);
@@ -116,6 +117,46 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
             setIsDownloadingPdf(false);
         }
     };
+    
+    const handleDownloadPng = async () => {
+        const node = pngRef.current;
+        if (!node) {
+            toast({ title: "Error", description: "Could not find image content.", variant: "destructive" });
+            return;
+        }
+
+        setIsDownloadingPng(true);
+        track('click_download_png', { address });
+
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        try {
+            const dataUrl = await toPng(node, {
+                pixelRatio: 2,
+                cacheBust: true,
+                backgroundColor: '#111115' // dark background
+            });
+
+            const link = document.createElement('a');
+            link.download = generateFilename('png');
+            link.href = dataUrl;
+            link.click();
+            
+            toast({
+                title: "Success!",
+                description: "Image downloaded successfully.",
+            });
+        } catch (error) {
+            console.error('Error generating PNG', error);
+            toast({
+                title: "Error",
+                description: "Failed to generate image. Please try again.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsDownloadingPng(false);
+        }
+    }
 
 
     if (!personalityData) {
@@ -162,8 +203,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <>
-    {/* Hidden component for PDF generation */}
+    {/* Hidden components for export */}
     <WalletStoryPDF ref={pdfRef} result={result} address={address} />
+    <WalletStoryImage ref={pngRef} result={result} address={address} />
 
 
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
@@ -303,6 +345,22 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                 <span>Share on LinkedIn</span>
                             </DropdownMenuItem>
                              <Separator className="my-1" />
+                             <DropdownMenuItem onClick={handleDownloadPng} disabled={isDownloadingPng}>
+                                {isDownloadingPng ? (
+                                    <div className="flex items-center">
+                                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Generating Image...
+                                    </div>
+                                ) : (
+                                    <>
+                                        <ImageIcon className="mr-2 h-4 w-4" />
+                                        <span>Download Image (PNG)</span>
+                                    </>
+                                )}
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={handleDownloadPdf} disabled={isDownloadingPdf}>
                                 {isDownloadingPdf ? (
                                      <div className="flex items-center">
