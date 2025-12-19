@@ -32,7 +32,7 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
         backgroundColor: '#ffffff',
         color: '#111111',
         padding: '48px',
-        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontFamily: 'Arial, Helvetica, sans-serif',
         boxSizing: 'border-box' as const,
         visibility: 'visible' as const,
         opacity: 1,
@@ -48,7 +48,7 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
       logo: {
         fontSize: '24px',
         fontWeight: 700,
-        color: '#6366f1',
+        color: '#4f46e5',
       },
       addressText: {
         fontSize: '16px',
@@ -65,7 +65,7 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
       },
       summary: {
         fontSize: '20px',
-        color: '#4b5563',
+        color: '#444444',
         textAlign: 'center' as const,
         marginBottom: '32px',
         lineHeight: 1.5,
@@ -87,7 +87,7 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
       },
       trait: {
         backgroundColor: '#f3f4f6',
-        color: '#374151',
+        color: '#333333',
         padding: '8px 16px',
         borderRadius: '20px',
         fontSize: '14px',
@@ -99,7 +99,7 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
       },
       storyText: {
         fontSize: '16px',
-        color: '#374151',
+        color: '#333333',
         lineHeight: 1.8,
         whiteSpace: 'pre-wrap' as const,
       },
@@ -117,7 +117,7 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
       },
       statLabel: {
         fontSize: '14px',
-        color: '#6b7280',
+        color: '#666666',
         marginBottom: '4px',
       },
       statValue: {
@@ -134,16 +134,16 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
       },
       badgeName: {
         fontWeight: 600,
-        color: '#6366f1',
+        color: '#2563eb',
       },
       badgeRarity: {
         fontSize: '12px',
-        color: '#9ca3af',
+        color: '#666666',
         marginLeft: '8px',
       },
       badgeDescription: {
         fontSize: '14px',
-        color: '#6b7280',
+        color: '#555555',
         marginTop: '4px',
       },
       footer: {
@@ -152,7 +152,7 @@ export const WalletStoryExport = forwardRef<HTMLDivElement, WalletStoryExportPro
         borderTop: '1px solid #e5e7eb',
         textAlign: 'center' as const,
         fontSize: '14px',
-        color: '#9ca3af',
+        color: '#888888',
       },
     };
 

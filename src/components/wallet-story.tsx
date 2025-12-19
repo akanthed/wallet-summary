@@ -64,13 +64,19 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const verifyExportReady = (): boolean => {
         const node = exportRef.current;
         if (!node) {
-            console.warn('[Export] Export ref not found');
+            console.error('[Export] Export ref not found');
             return false;
         }
         if (node.offsetHeight === 0) {
-            console.warn('[Export] Export container has zero height');
+            console.error('[Export] Export container has zero height');
             return false;
         }
+        const textContent = node.innerText.trim();
+        if (!textContent || textContent.length === 0) {
+            console.error('[Export] Export container has no text content');
+            return false;
+        }
+        console.log('[Export] Content verified, length:', textContent.length);
         return true;
     };
 
@@ -90,8 +96,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
             const node = exportRef.current!;
             
-            // Wait for render cycle to complete
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait for fonts and render cycle to complete
+            await (document.fonts as any).ready;
+            await new Promise(resolve => setTimeout(resolve, 300));
 
             const dataUrl = await toPng(node, {
                 backgroundColor: '#ffffff',
@@ -99,7 +106,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 height: node.scrollHeight,
                 pixelRatio: 3,
                 cacheBust: true,
-                skipFonts: true, // Skip external fonts to avoid CORS errors
+                skipFonts: true,
+                style: {
+                    color: '#111111',
+                },
             });
 
             // Trigger download
@@ -141,8 +151,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
             const node = exportRef.current!;
             
-            // Wait for render cycle to complete
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait for fonts and render cycle to complete
+            await (document.fonts as any).ready;
+            await new Promise(resolve => setTimeout(resolve, 300));
 
             // Generate PNG first
             const dataUrl = await toPng(node, {
@@ -151,7 +162,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                 height: node.scrollHeight,
                 pixelRatio: 3,
                 cacheBust: true,
-                skipFonts: true, // Skip external fonts to avoid CORS errors
+                skipFonts: true,
+                style: {
+                    color: '#111111',
+                },
             });
 
             // Create PDF from PNG
