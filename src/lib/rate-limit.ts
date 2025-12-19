@@ -1,5 +1,5 @@
 
-const MAX_DAILY_ANALYSES = 5;
+const MAX_DAILY_ANALYSES = 15;
 const RATE_LIMIT_KEY = 'walletStoryRateLimit';
 
 type RateLimitData = {
