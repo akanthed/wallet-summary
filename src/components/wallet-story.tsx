@@ -24,6 +24,8 @@ import { track } from "@/lib/analytics";
 import { Timeline } from "./timeline";
 import { Badges } from "./badges";
 import { WalletStoryExport } from "./wallet-story-export";
+import { WalletStoryShareCard } from "./wallet-story-share-card";
+import { toPng } from 'html-to-image';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -40,8 +42,10 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
     const [isTimelineOpen, setIsTimelineOpen] = useState(false);
     const [isExportingPng, setIsExportingPng] = useState(false);
     const [isExportingPdf, setIsExportingPdf] = useState(false);
+    const [isExportingShareCard, setIsExportingShareCard] = useState(false);
 
     const exportRef = useRef<HTMLDivElement>(null);
+    const shareCardRef = useRef<HTMLDivElement>(null);
 
 
     const handleCopyToClipboard = (text: string, successMessage: string = "Copied to clipboard!") => {
@@ -75,6 +79,41 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
         console.log('[Export] Content verified, length:', textContent.length);
         return true;
     };
+
+    const exportShareCard = async () => {
+        if (isExportingShareCard) return;
+        setIsExportingShareCard(true);
+
+        try {
+            // verify share card is present
+            const node = shareCardRef.current;
+            if (!node) throw new Error('Share card not mounted');
+
+            // wait for fonts/render
+            await (document.fonts as any).ready;
+            await new Promise(r => setTimeout(r, 300));
+
+            const dataUrl = await toPng(node, {
+                backgroundColor: '#0b0b10',
+                pixelRatio: 3,
+                cacheBust: true,
+            });
+
+            const link = document.createElement('a');
+            const name = personalityData?.personalityTitle?.toLowerCase().replace(/\s+/g, '-') || 'wallet-story';
+            link.download = `wallet-story-${name}.png`;
+            link.href = dataUrl;
+            link.click();
+            link.remove();
+
+            toast({ title: 'Share card downloaded' });
+        } catch (err) {
+            console.error('Share card export failed', err);
+            toast({ title: 'Export failed', variant: 'destructive' });
+        } finally {
+            setIsExportingShareCard(false);
+        }
+    }
 
     /**
      * Export as PNG using html2canvas
@@ -194,28 +233,49 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
             const imgData = canvas.toDataURL('image/png', 1.0);
 
-            // Create PDF
-            const pdf = new jsPDF({
-                orientation: 'portrait',
-                unit: 'px',
-                format: 'a4',
-            });
-
+            // Create PDF and paginate the large canvas into A4-height slices
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'px', format: 'a4' });
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            
+
             const imgWidth = canvas.width;
             const imgHeight = canvas.height;
 
-            // Scale to fit page width
+            // scale factor to fit canvas width to page width minus margins
             const margin = 20;
             const availableWidth = pageWidth - (margin * 2);
             const scale = availableWidth / imgWidth;
-            
-            const scaledWidth = imgWidth * scale;
-            const scaledHeight = imgHeight * scale;
 
-            pdf.addImage(imgData, 'PNG', margin, margin, scaledWidth, scaledHeight);
+            // scaled full height in PDF units
+            const fullPdfHeight = imgHeight * scale;
+
+            // number of pages required
+            const totalPages = Math.ceil(fullPdfHeight / pageHeight);
+
+            // slice height in original canvas px for each PDF page
+            const sliceHeight = Math.floor(pageHeight / scale);
+
+            for (let page = 0; page < totalPages; page++) {
+                const srcY = page * sliceHeight;
+                const srcH = Math.min(sliceHeight, imgHeight - srcY);
+
+                // create a temporary canvas to hold the slice
+                const sliceCanvas = document.createElement('canvas');
+                sliceCanvas.width = imgWidth;
+                sliceCanvas.height = srcH;
+                const ctx = sliceCanvas.getContext('2d');
+                if (!ctx) throw new Error('Failed to create canvas context for PDF slice');
+
+                ctx.drawImage(canvas, 0, srcY, imgWidth, srcH, 0, 0, imgWidth, srcH);
+
+                const sliceData = sliceCanvas.toDataURL('image/png');
+                const pdfSliceHeight = srcH * scale;
+
+                pdf.addImage(sliceData, 'PNG', margin, margin, availableWidth, pdfSliceHeight);
+
+                if (page < totalPages - 1) pdf.addPage();
+            }
+
             pdf.save(generateFilename('pdf'));
 
             toast({
@@ -280,8 +340,9 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
 
   return (
     <>
-    {/* Hidden component for export */}
+    {/* Hidden components for export */}
     <WalletStoryExport ref={exportRef} result={result} address={address} />
+    <WalletStoryShareCard ref={shareCardRef} result={result} address={address} />
 
 
     <div className="container mx-auto max-w-3xl px-4 py-12 sm:py-16 animate-in fade-in duration-500">
@@ -437,19 +498,19 @@ export function WalletStory({ result, onReset, address }: WalletStoryProps) {
                                     </>
                                 )}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={exportAsPDF} disabled={isExportingPdf}>
-                                {isExportingPdf ? (
+                            <DropdownMenuItem onClick={exportShareCard} disabled={isExportingShareCard}>
+                                {isExportingShareCard ? (
                                     <div className="flex items-center">
                                         <svg className="animate-spin -ml-1 mr-3 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                         </svg>
-                                        Generating PDF...
+                                        Generating Share Card...
                                     </div>
                                 ) : (
                                     <>
-                                        <Download className="mr-2 h-4 w-4" />
-                                        <span>Download PDF</span>
+                                        <ImageIcon className="mr-2 h-4 w-4" />
+                                        <span>Share Card</span>
                                     </>
                                 )}
                             </DropdownMenuItem>
